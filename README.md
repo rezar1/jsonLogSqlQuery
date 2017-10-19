@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Log Monitoring Extension  
 
 ##Use Case
@@ -89,3 +90,7 @@ Find out more in the [AppSphere](http://community.appdynamics.com/t5/eXchange-Co
 
 For any questions or feature request, please contact [AppDynamics Center of Excellence](mailto:ace-request@appdynamics.com).
 
+=======
+# LogSqlQuery
+使用类似sql操作语言对日志文件进行查询检索分组统计排序等操作
+>>>>>>> b1447a59d16c7ad55afc94ea7c9cbbf209f44a5a
