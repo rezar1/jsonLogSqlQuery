@@ -1,0 +1,25 @@
+<monitor>
+    <name>log-monitor</name>
+    <type>managed</type>
+    <description>Log Monitoring Extension</description>
+    <monitor-configuration></monitor-configuration>
+    <monitor-run-task>
+        <execution-style>periodic</execution-style>
+        <execution-frequency-in-seconds>60</execution-frequency-in-seconds>
+        <name>Log Monitor Run task</name>
+        <display-name>Log Monitor Run task</display-name>
+        <description>Log Monitor Run task</description>
+        <type>java</type>
+        <execution-timeout-in-secs>60</execution-timeout-in-secs>
+        
+		<task-arguments>
+			<argument name="config-file" is-required="true" default-value="monitors/LogMonitor/conf/config.yaml" />
+		</task-arguments>
+            
+        <java-task>
+            <classpath>log-monitoring-extension.jar</classpath>
+            <impl-class>com.appdynamics.extensions.logmonitor.LogMonitor</impl-class>
+        </java-task>
+        
+    </monitor-run-task>
+</monitor>

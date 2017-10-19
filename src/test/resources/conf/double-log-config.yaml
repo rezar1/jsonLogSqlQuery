@@ -1,0 +1,35 @@
+logs:
+  - displayName: "TestLog1"
+    logDirectory: "src/test/resources"
+    logName: "test-log-1.log"
+    searchStrings:
+       - displayName: "Debug"
+         pattern: "debug"
+         matchExactString: false
+         caseSensitive: false
+       - displayName: "Info"
+         pattern: "info"
+         matchExactString: false
+         caseSensitive: false
+       - displayName: "Error"
+         pattern: "error"
+         matchExactString: false
+         caseSensitive: false
+    
+  - displayName: ""
+    logDirectory: "src/test/resources"
+    logName: "test-log-2.log"
+    searchStrings:
+       - displayName: "Trace"
+         pattern: "trace"
+         matchExactString: true
+         caseSensitive: false
+
+metricCharacterReplacer:
+    - replace: ","
+      replaceWith: " "
+# Number of concurrent threads
+noOfThreads: 3
+
+#prefix used to show up metrics in AppDynamics 
+metricPrefix: "Custom Metrics|LogMonitor|"

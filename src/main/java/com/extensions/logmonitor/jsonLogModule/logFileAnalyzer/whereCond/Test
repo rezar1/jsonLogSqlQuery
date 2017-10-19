@@ -1,0 +1,20 @@
+['MultiCondition': 
+	
+			[
+				app like 'Rezar*', 
+				 AND , 
+				['MultiCondition': 
+					[
+						[userId = 23,  AND , age = 4]
+					]
+				]
+			]
+	
+]
+
+
+
+[['MultiCondition': [['MultiCondition': [[app like 'Rezar*',  AND , 'MultiCondition': [['MultiCondition': [['MultiCondition': [['MultiCondition': [[userId = 23,  AND , age = 4]]]]]]]]]]]]]]
+					
+						
+	
