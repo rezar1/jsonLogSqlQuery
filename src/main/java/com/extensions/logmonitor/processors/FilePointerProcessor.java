@@ -1,6 +1,6 @@
 package com.extensions.logmonitor.processors;
 
-import static com.extensions.logmonitor.Constants.*;
+import static com.extensions.logmonitor.Constants.FILEPOINTER_FILENAME;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -60,7 +60,7 @@ public class FilePointerProcessor {
 		}
 	}
 
-	private void initialiseFilePointers() {
+	public void initialiseFilePointers() {
 		LOGGER.info("Initialising filepointers...");
 		File file = new File(getFilePointerPath());
 		if (!file.exists()) {

@@ -71,7 +71,7 @@ public class TestCl {
 			// whereCondition.addWhereExecuteResult(optExecute6,
 			// optExecute6.OptSuccess(""));
 			log.info("executeResult:{}", whereCondition.checkWhereIsSuccess());
-			log.info("fromLogTable:{}", queryExecutor.getFromTableLogName());
+			// log.info("fromLogTable:{}", queryExecutor.getFromTableLogName());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

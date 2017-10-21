@@ -119,7 +119,6 @@ public class JsonLogQuerySqlParser {
 		List<QueryExecutor> executores = new ArrayList<>();
 		executores.add(executor);
 		executores.add(executor2);
-		// doJsonLogStrAnalyzer(executores);
 		JsonLogDataQueryHandler handler = new JsonLogDataQueryHandler(executores);
 		StopWatch watch = new StopWatch();
 		watch.start();

@@ -82,14 +82,4 @@ public class SelectPart {
 		return this.multiFunQueryExecute.get(superPath);
 	}
 
-	public static void main(String[] args) {
-		ColumnValueQueryExecute columnValueQueryExecute = new ColumnValueQueryExecute();
-		String queryPath = "appInfo.geo.stree";
-		columnValueQueryExecute.setQueryPath(queryPath);
-		SelectPart sp = new SelectPart();
-		sp.addQueryExecute(columnValueQueryExecute);
-		QueryExecute<? extends Object> queryExecute = sp.getQueryExecuteWithSuperPath("appInfo.geo.stree");
-		System.out.println(queryExecute);
-	}
-
 }
