@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -12,9 +13,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.time.StopWatch;
 
+import com.extensions.logmonitor.exceptions.DataCleanedExeception;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDataCache.SeriAndDeser;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDataCache.utils.StringDescAndSer;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.orderByDataCache.SingleOrderByDataCache;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupFilter;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupIdContact;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderByDataItemWithObj;
 import com.extensions.logmonitor.util.sortUtils.FileStore2;
 import com.google.common.collect.Lists;
@@ -117,7 +121,6 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 			try {
 				tempFile.createNewFile();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -129,9 +132,9 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 
 	public void cacheRecord(QueryResultDataItem cacheData) {
 		totalCount.incrementAndGet();
-		long offset = fileStore.set(cacheData);
-		cacheData.setRecordId(offset);
-		cacheData.setOffset(offset);
+		long currentPos = this.fileStore.currentPosition();
+		cacheData.setOffset(currentPos);
+		fileStore.set(cacheData);
 	}
 
 	public void triggerOver() {
@@ -158,14 +161,23 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 		if (this.orderByDataCache != null) {
 			List<OrderByDataItemWithObj> cacheRecord = this.orderByDataCache.getCacheRecord(startOffset, batchSize);
 			for (OrderByDataItemWithObj obdi : cacheRecord) {
-				result.add(this.fileStore.read(obdi.getRecordId()));
+				try {
+					QueryResultDataItem read = this.fileStore.read(obdi.getRecordId());
+					result.add(read);
+				} catch (DataCleanedExeception e) {
+					System.out.println("data with recordId:" + obdi.getRecordId() + " has cleaned");
+				}
 			}
 		} else {
 			int endOffset = (startOffset + batchSize);
 			for (int i = 0; i < this.totalCount.get(); i++) {
-				QueryResultDataItem readData = this.fileStore.read(null);
-				if (i >= startOffset && i < endOffset) {
-					result.add(readData);
+				try {
+					QueryResultDataItem readData = this.fileStore.read(null);
+					if (i >= startOffset && i < endOffset) {
+						result.add(readData);
+					}
+				} catch (DataCleanedExeception e) {
+					System.out.println(e.getMessage());
 				}
 			}
 		}
@@ -177,6 +189,17 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 	}
 
 	public void setGroupHavingFilter(Map<Long, Boolean> havingFilter) {
+
+	}
+
+	public void setGroupHavingFilter(GroupFilter groupFilter) {
+		Iterator<GroupIdContact> iterator = groupFilter.iterator();
+		while (iterator.hasNext()) {
+			GroupIdContact next = iterator.next();
+			if (next.isNeedRemove()) {
+				this.fileStore.clean(next.getRecordId());
+			}
+		}
 	}
 
 	/**
@@ -184,7 +207,7 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 	 */
 	@Override
 	public long allocateRecordId() {
-		return 0;
+		return this.fileStore.currentPosition();
 	}
 
 	/**

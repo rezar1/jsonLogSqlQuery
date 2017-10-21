@@ -10,7 +10,6 @@ import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select.QueryExecu
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.OptExecute;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.WhereCondition;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.optExecutes.EqOpt;
-import com.extensions.logmonitor.jsonLogModule.queryExecute.Clearable;
 import com.extensions.logmonitor.util.GenericsUtils;
 import com.extensions.logmonitor.util.TupleUtil;
 import com.extensions.logmonitor.util.TwoTuple;
@@ -26,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public class GroupExecutor implements Clearable {
+public class GroupExecutor {
 
 	// 系统配置
 	private List<String> groupByPaths = new ArrayList<>();
@@ -35,15 +34,9 @@ public class GroupExecutor implements Clearable {
 	private Map<String, List<QueryExecute<? extends Object>>> havingGroupFunQuery = new HashMap<>();
 	// 针对列上的分组函数2
 	private Map<OptExecute, QueryExecute<? extends Object>> havingOptExecuteToQueryMapper = new HashMap<>();
-	/**
-	 * 内存分组存储
-	 */
-	private ThreadLocal<Map<Long, Boolean>> groupByValues = new ThreadLocal<Map<Long, Boolean>>() {
-		public Map<Long, Boolean> initialValue() {
-			return new HashMap<>();
-		}
-	};
 	private boolean needHaving;
+
+	private GroupFilter groupFilter = new BtreeGroupFilter();
 
 	/**
 	 * @param queryReusltDataItem
@@ -52,6 +45,7 @@ public class GroupExecutor implements Clearable {
 		if (!this.needHaving) {
 			return;
 		}
+		Map<OptExecute, Boolean> optExecuteResult = new HashMap<>();
 		Map<String, List<OptExecute>> optExecuteQuickVisitCache = this.groupWhereCondition
 				.getOptExecuteQuickVisitCache();
 		for (String queryPath : optExecuteQuickVisitCache.keySet()) {
@@ -60,11 +54,11 @@ public class GroupExecutor implements Clearable {
 				boolean optSuccess = checkOptExecuteForGroupCondition(optExecute, value);
 				log.debug("optExecuteType:{} optExecute :{} and value:{} and optSuccess:{}",
 						optExecute.getClass().getSimpleName(), optExecute, value, optSuccess);
-				this.groupWhereCondition.addWhereExecuteResult(optExecute, optSuccess);
+				optExecuteResult.put(optExecute, optSuccess);
 			}
 		}
-		boolean checkWhereIsSuccess = this.groupWhereCondition.checkWhereIsSuccess();
-		this.groupByValues.get().put(queryReusltDataItem.getGroupId(), checkWhereIsSuccess);
+		boolean checkWhereIsSuccess = this.groupWhereCondition.checkWhereIsSuccess(optExecuteResult);
+		this.groupFilter.havingResult(queryReusltDataItem.getGroupId(), !checkWhereIsSuccess);
 	}
 
 	/**
@@ -81,19 +75,18 @@ public class GroupExecutor implements Clearable {
 	}
 
 	public TwoTuple<Boolean, Long> putQueryResultDataItem(QueryResultDataItem queryResultDataItem) {
-		Map<Long, Boolean> map = this.groupByValues.get();
 		Map<String, Object> queryResult = queryResultDataItem.getQueryResult();
 		GroupByKey gb = new GroupByKey();
 		for (String groupByItem : this.groupByPaths) {
 			Object object = queryResult.get(groupByItem);
 			gb.addGroupByFieldValue(object);
 		}
-		boolean isHasExists = (map.get(gb.getHashValue()) != null);
-		// System.out.println("group for queryResultDataItem:" +
-		// queryResultDataItem + " isHasExists:" + isHasExists
-		// + " with group id:" + gb.getHashValue());
+		Long groupId = gb.getHashValue();
+		GroupIdContact groupIdContact = this.groupFilter.findGroupIdContact(groupId);
+		boolean isHasExists = groupIdContact != null;
 		if (!isHasExists) {
-			map.put(gb.getHashValue(), false);
+			groupIdContact = new GroupIdContact(queryResultDataItem.getRecordId());
+			this.groupFilter.initGroupId(groupId, groupIdContact);
 		}
 		return TupleUtil.tuple(isHasExists, gb.getHashValue());
 	}
@@ -128,11 +121,6 @@ public class GroupExecutor implements Clearable {
 				queryExecute);
 	}
 
-	@Override
-	public void clearResource() {
-		this.groupByValues.remove();
-	}
-
 	/**
 	 * @param superPath
 	 * @return
@@ -145,7 +133,11 @@ public class GroupExecutor implements Clearable {
 	 * @return
 	 */
 	public Map<Long, Boolean> getHavingFilter() {
-		return this.groupWhereCondition == null ? null : this.groupByValues.get();
+		return this.groupWhereCondition == null ? null : null;
+	}
+
+	public GroupFilter getGroupFilter() {
+		return this.groupFilter;
 	}
 
 	/**
@@ -154,8 +146,8 @@ public class GroupExecutor implements Clearable {
 	public void setNeedHaving(boolean needHaving) {
 		this.needHaving = true;
 	}
-	
-	public boolean needHaving(){
+
+	public boolean needHaving() {
 		return this.needHaving;
 	}
 

@@ -101,8 +101,8 @@ public class QueryResultDataItem implements DataSizeCountable {
 
 	@Override
 	public String toString() {
-		return "QueryResultDataItemWithDataStroe [recordId=" + recordId + ", offset=" + offset + ", queryResult="
-				+ queryResult + ", groupId=" + groupId + "]";
+		return "QueryResultDataItem [recordId=" + recordId + ", offset=" + offset + ", queryResult=" + queryResult
+				+ ", groupId=" + groupId + "]";
 	}
 
 }

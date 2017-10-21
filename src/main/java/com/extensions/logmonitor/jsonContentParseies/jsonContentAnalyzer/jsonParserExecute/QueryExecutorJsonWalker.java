@@ -1,4 +1,4 @@
-package com.extensions.logmonitor.jsonContentParseies.copy;
+package com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonParserExecute;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,7 +72,8 @@ public class QueryExecutorJsonWalker {
 						executeLazy.duQuery(this.queryReusltDataItem);
 					}
 				}
-
+				long allocateRecordId = this.queryExecutor.getDataCache().allocateRecordId();
+				this.queryReusltDataItem.setRecordId(allocateRecordId);
 				boolean isExistsInGroup = false;
 				// 如果是group操作,获取分组,并判断是否需要将当前取值添加到集合中去
 				if (this.isGroup) {
@@ -93,13 +94,11 @@ public class QueryExecutorJsonWalker {
 				}
 				// 根据分组情况判断当前查询结果是否添加到最终结果集合中
 				if (!isExistsInGroup) {
-					long allocateRecordId = this.queryExecutor.getDataCache().allocateRecordId();
-					this.queryReusltDataItem.setRecordId(allocateRecordId);
 					this.queryExecutor.getDataCache().cacheRecord(this.queryReusltDataItem);
-					this.queryReusltDataItem.getRecordId();
 				}
 				// 处理排序
-				if (this.queryExecutor.getOrderExecutor() != null && this.orderByDataItemWithObj != null) {
+				if (!isExistsInGroup && this.queryExecutor.getOrderExecutor() != null
+						&& this.orderByDataItemWithObj != null) {
 					this.orderByDataItemWithObj.setRecordId(this.queryReusltDataItem.getRecordId());
 					this.queryExecutor.getOrderExecutor().addOrderByDataItem(orderByDataItemWithObj);
 				}
@@ -107,7 +106,6 @@ public class QueryExecutorJsonWalker {
 			this.queryCache.clear();
 		} catch (Exception e) {
 			e.printStackTrace();
-			// System.out.println("skip!!!");
 		}
 	}
 

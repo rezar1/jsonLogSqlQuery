@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -32,13 +31,12 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 	private FilePointerProcessor filePointerProcessor;
 	private LogJsonAnalyzer logJsonAnalyzer;
 
-	// private Map<String, String> logEventTypes = new HashMap<>();
-	private Set<String> handleOverLogEventTypes = new HashSet<>();
-
 	public LogMonitorTaskForJsonAnalyzer(FilePointerProcessor filePointerProcessor, LogJsonAnalyzer logJsonAnalyzer) {
 		this.filePointerProcessor = filePointerProcessor;
 		this.logJsonAnalyzer = logJsonAnalyzer;
 	}
+
+	private int count = 0;
 
 	public MultiLogAnalyzerResult call() throws Exception {
 		String dirPath = resolveDirPath(logJsonAnalyzer.getLogDirectory());
@@ -58,7 +56,13 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 			watch.split();
 			while ((currentLine = randomAccessFile.readLine()) != null) {
 				handleLine(currentLine, curFilePointer);
+				count++;
 				curFilePointer = randomAccessFile.getFilePointer();
+				if (count == 100000) {
+					watch.split();
+					count = 0;
+					System.out.println("handle 10000 Line use time:" + watch.getSplitTime());
+				}
 			}
 			watch.stop();
 			System.out.println("scan all line use time:" + watch.getSplitTime());

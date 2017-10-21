@@ -10,6 +10,9 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonLexer;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser;
+import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonParserExecute.JsonContentAnalyzer;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.QueryResultDataItem;
 import com.extensions.logmonitor.jsonLogModule.queryExecute.QueryExecutor;
 
@@ -27,7 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 public class JsonLogDataQueryHandler {
 
 	private ByteArrayOutputStream baos;
-	// private int lineCount;
 	private List<QueryExecutor> queryExecutors;
 
 	public JsonLogDataQueryHandler(List<QueryExecutor> queryExecutors) {
@@ -44,15 +46,12 @@ public class JsonLogDataQueryHandler {
 			ByteArrayInputStream bais = new ByteArrayInputStream(lineLog.getBytes());
 			// 词语、语法解析，生成抽象语法树
 			ANTLRInputStream input = new ANTLRInputStream(bais);
-			com.extensions.logmonitor.jsonContentParseies.copy.jsonLexer lexer = new com.extensions.logmonitor.jsonContentParseies.copy.jsonLexer(
-					input);
+			jsonLexer lexer = new jsonLexer(input);
 			CommonTokenStream tokens = new CommonTokenStream(lexer);
-			com.extensions.logmonitor.jsonContentParseies.copy.jsonParser parser = new com.extensions.logmonitor.jsonContentParseies.copy.jsonParser(
-					tokens);
+			jsonParser parser = new jsonParser(tokens);
 			ParseTree tree = parser.jsonFile();
 			ParseTreeWalker walker = new ParseTreeWalker();
-			com.extensions.logmonitor.jsonContentParseies.copy.JsonContentAnalyzer jsonLogSqlAnalyzer = new com.extensions.logmonitor.jsonContentParseies.copy.JsonContentAnalyzer(
-					queryExecutors);
+			JsonContentAnalyzer jsonLogSqlAnalyzer = new JsonContentAnalyzer(queryExecutors);
 			walker.walk(jsonLogSqlAnalyzer, tree);
 			bais.reset();
 			this.baos.reset();
@@ -62,9 +61,6 @@ public class JsonLogDataQueryHandler {
 	}
 
 	public void doAnalyzerResult() {
-		// if (this.lineCount != 0) {
-		// this.doHandle();
-		// }
 		for (QueryExecutor qe : this.queryExecutors) {
 			List<QueryResultDataItem> doHandle = qe.doHandle();
 			for (QueryResultDataItem qrdi : doHandle) {

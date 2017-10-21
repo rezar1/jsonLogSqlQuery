@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.orderByDataCache.SingleOrderByDataCache;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupFilter;
 
 /**
  * 
@@ -30,5 +31,7 @@ public interface QueryResultDataCache {
 	 * @param havingFilter
 	 */
 	public void setGroupHavingFilter(Map<Long, Boolean> havingFilter);
+
+	public void setGroupHavingFilter(GroupFilter groupFilter);
 
 }

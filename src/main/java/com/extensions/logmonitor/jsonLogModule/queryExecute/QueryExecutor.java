@@ -1,13 +1,10 @@
 package com.extensions.logmonitor.jsonLogModule.queryExecute;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
-import com.extensions.logmonitor.jsonLogModule.configuration.LogAnalyzerConfiguration;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.FileOutterQueryResultDataCache;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.QueryResultDataCache;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.QueryResultDataItem;
-import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.TriggerOutterCacheInvoker;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupExecutor;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderExecutor;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select.SelectPart;
@@ -34,23 +31,9 @@ public class QueryExecutor {
 	private GroupExecutor groupExecutor;
 	private OrderExecutor orderExecutor;
 	private Long[] limitInfos;
-
-	private QueryResultDataCache dataCache = new FileOutterQueryResultDataCache();// InnterQueryResultDataCache
-																					// OutterQueryResultDataCache();
-																					// 	FileOutterQueryResultDataCache
+	private QueryResultDataCache dataCache = new FileOutterQueryResultDataCache();
 
 	private int querySize;
-	private TriggerOutterCacheInvoker triggerOutterCacheInvoker;
-	private AtomicLong recordCount = new AtomicLong(0);
-
-	public Long recordIncrement() {
-		long recordId = 0;
-		if ((recordId = this.recordCount.incrementAndGet()) > LogAnalyzerConfiguration.MAX_SORT_BUFF_SIZE_VALUE
-				&& this.triggerOutterCacheInvoker != null) {
-			this.triggerOutterCacheInvoker.trigger(this.dataCache);
-		}
-		return recordId;
-	}
 
 	public QueryResultDataItem createQueryResultDataItem() {
 		QueryResultDataItem setFileName = new QueryResultDataItem(querySize);
@@ -64,7 +47,7 @@ public class QueryExecutor {
 				this.orderExecutor.executeSort();
 				this.dataCache.setOrderByDataCache(this.orderExecutor.getSingleOrderByDataCache());
 			} else if (this.groupExecutor != null && this.groupExecutor.needHaving()) {
-				this.dataCache.setGroupHavingFilter(this.groupExecutor.getHavingFilter());
+				this.dataCache.setGroupHavingFilter(this.groupExecutor.getGroupFilter());
 			}
 			if (this.limitInfos != null) {
 				cacheRecord = this.dataCache.getCacheRecord(limitInfos[0].intValue(), limitInfos[1].intValue());
@@ -91,9 +74,6 @@ public class QueryExecutor {
 		}
 		if (this.orderExecutor != null) {
 			this.orderExecutor.clearResource();
-		}
-		if (this.groupExecutor != null) {
-			this.groupExecutor.clearResource();
 		}
 		return this;
 	}

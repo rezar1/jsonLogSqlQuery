@@ -15,6 +15,7 @@ import java.util.Comparator;
 
 import org.apache.log4j.Logger;
 
+import com.extensions.logmonitor.exceptions.DataCleanedExeception;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDataCache.Check64bitsJVM;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDataCache.Constants;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDataCache.DataSizeCountable;
@@ -265,8 +266,11 @@ public class FileStore2<T extends DataSizeCountable> {
 		this.callback = callback;
 	}
 
-	private ByteBuffer seeByteBuffer = ByteBuffer.allocate(4);
+	private ByteBuffer seeByteBuffer = ByteBuffer.allocate(5);
 	private ByteBuffer readDataBuffer = ByteBuffer.allocate(1024);
+
+	public static final byte NORMAL = 1;
+	public static final byte CLEANED = 0;
 
 	/**
 	 * Read block from file
@@ -275,11 +279,13 @@ public class FileStore2<T extends DataSizeCountable> {
 	 *            of block
 	 * @return ByteBuffer from pool with data
 	 */
-	public T read(Long offset) {
+	public T read(Long offset) throws DataCleanedExeception {
 		if (!validState) {
 			throw new InvalidStateException();
 		}
+		DataCleanedExeception dataCleanedExeception = null;
 		try {
+			long position = this.fileChannel.position();
 			if (offset != null) {
 				fileChannel.position(offset);
 			}
@@ -290,6 +296,11 @@ public class FileStore2<T extends DataSizeCountable> {
 			}
 			seeByteBuffer.rewind();
 			int size = this.seeByteBuffer.getInt();
+			byte isClean = seeByteBuffer.get();
+			if (isClean == CLEANED) {
+				// 该块数据已经被清理 TODO
+				dataCleanedExeception = new DataCleanedExeception(position);
+			}
 			// System.out.println("size:" + size + "\t add sizeBuff:" + (size +
 			// 4));
 			ByteBuffer tempBuffer = null;
@@ -305,6 +316,9 @@ public class FileStore2<T extends DataSizeCountable> {
 				this.readDataBuffer.rewind();
 				tempBuffer = this.readDataBuffer;
 			}
+			if (dataCleanedExeception != null) {
+				throw dataCleanedExeception;
+			}
 			if (tempBuffer != null) {
 				return this.dataSeriAndDeser.deserialize(tempBuffer);
 			}
@@ -315,6 +329,15 @@ public class FileStore2<T extends DataSizeCountable> {
 	}
 
 	private ByteBuffer setDataBuffer = ByteBuffer.allocate(1024);
+
+	public long currentPosition() {
+		try {
+			return this.fileChannel.position();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return 0l;
+	}
 
 	/**
 	 * Write from buf to file
@@ -335,6 +358,7 @@ public class FileStore2<T extends DataSizeCountable> {
 			int sizeOfData = data.sizeOfData();
 			this.setDataBuffer = checkByteBuffer(sizeOfData, this.setDataBuffer, true);
 			this.setDataBuffer.putInt(sizeOfData);
+			this.setDataBuffer.put(NORMAL); // 判断该块数据是否被清空,默认值正常
 			this.dataSeriAndDeser.serialize(data, setDataBuffer);
 			setDataBuffer.rewind();
 			if (useMmap) {
@@ -359,7 +383,7 @@ public class FileStore2<T extends DataSizeCountable> {
 	 */
 	private ByteBuffer checkByteBuffer(int sizeOfData, ByteBuffer dataBuffer, boolean isCreate) {
 		if (isCreate) {
-			sizeOfData += 4;
+			sizeOfData += 5;
 		}
 		if (sizeOfData > dataBuffer.capacity()) {
 			dataBuffer = ByteBuffer.allocate(sizeOfData);
@@ -375,6 +399,55 @@ public class FileStore2<T extends DataSizeCountable> {
 			}
 		}
 		return dataBuffer;
+	}
+
+	private ByteBuffer cleanByteBuffer = ByteBuffer.allocate(1);
+
+	/**
+	 * @param recordId
+	 */
+	public void clean(long offset) {
+		if (!validState) {
+			throw new InvalidStateException();
+		}
+		try {
+			fileChannel.position(offset);
+			seeByteBuffer.clear();
+			int read = fileChannel.read(seeByteBuffer);
+			if (read == -1) {
+				log.debug("not found data with position:" + offset);
+				return;
+			}
+			seeByteBuffer.rewind();
+			int size = this.seeByteBuffer.getInt();
+			if (size == 0) {
+				log.debug("not found data with position:" + offset);
+				return;
+			}
+			byte isClean = this.seeByteBuffer.get();
+			if (isClean == CLEANED) {
+				log.debug("was cleaned with position:" + offset);
+				return;
+			}
+			fileChannel.position(this.fileChannel.position() - 1);
+			cleanByteBuffer.clear();
+			cleanByteBuffer.put(CLEANED);
+			cleanByteBuffer.flip();
+			this.fileChannel.write(cleanByteBuffer);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * @param tempBuffer
+	 * @return
+	 */
+	public void deserializeEmpty(ByteBuffer tempBuffer) {
+		int limit = tempBuffer.limit();
+		for (int i = 0; i < limit; i++) {
+			tempBuffer.put((byte) 0);
+		}
 	}
 
 	/**

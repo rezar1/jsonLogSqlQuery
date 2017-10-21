@@ -78,6 +78,23 @@ public class LogMonitorTaskTest {
 	}
 
 	@Test
+	public void testJsonGrupAnalyzer() throws Exception {   
+		String logDirectory = "/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles";
+		String logName = "test.log";
+		FilePointer filePointer = new FilePointer();
+		filePointer.setFilename(logDirectory + logName);
+		when(mockFilePointerProcessor.getFilePointer(anyString(), anyString())).thenReturn(filePointer);
+		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("TestLog",
+				"/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles", "test.log");
+		SearchInfo searchInfo = new SearchInfo(
+				"select name,age,sum(age) as ageSum ,count(age) as ageCount from testJson where age between 50 and 95 group by age");
+		logJsonAnalyzer.addSearchInfo(searchInfo);
+		LogMonitorTaskForJsonAnalyzer analyzer = new LogMonitorTaskForJsonAnalyzer(mockFilePointerProcessor,
+				logJsonAnalyzer);
+		analyzer.call();
+	}
+
+	@Test
 	public void testLogAna() throws Exception {
 		String logDirectory = "/Users/rezar/Desktop/";
 		String logName = "test.log";
@@ -86,7 +103,7 @@ public class LogMonitorTaskTest {
 		when(mockFilePointerProcessor.getFilePointer(anyString(), anyString())).thenReturn(filePointer);
 		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("TestLog", "/Users/rezar/Desktop/", "count.log");
 		SearchInfo searchInfo = new SearchInfo(
-				"select app_id,sum(appIdCount) as appIdCount from Sa_Req where isSdk=false group by app_id having sum(appIdCount) > 900000");
+				"select app_id,sum(appIdCount) as appIdCount from Sa_Req where isSdk=false group by app_id having sum(appIdCount) < 900000");
 		logJsonAnalyzer.addSearchInfo(searchInfo);
 		LogMonitorTaskForJsonAnalyzer analyzer = new LogMonitorTaskForJsonAnalyzer(mockFilePointerProcessor,
 				logJsonAnalyzer);

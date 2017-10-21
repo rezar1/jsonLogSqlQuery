@@ -15,6 +15,7 @@ import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDa
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDataCache.SeriAndDeser;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDataCache.utils.StringDescAndSer;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.orderByDataCache.SingleOrderByDataCache;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupFilter;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderByDataItemWithObj;
 import com.extensions.logmonitor.util.GenericsUtils;
 
@@ -235,6 +236,11 @@ public class OutterQueryResultDataCache implements QueryResultDataCache {
 	@Override
 	public long allocateRecordId() {
 		return this.recordCount.getAndIncrement();
+	}
+
+	@Override
+	public void setGroupHavingFilter(GroupFilter groupFilter) {
+		
 	}
 
 }

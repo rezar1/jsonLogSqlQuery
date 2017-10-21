@@ -2,16 +2,25 @@ package com.extensions.logmonitor.jsonLogModule.jsonLogSelectParser;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CommonTokenFactory;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.UnbufferedCharStream;
+import org.antlr.v4.runtime.UnbufferedTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.apache.commons.lang.time.StopWatch;
 
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonLexer;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser;
+import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonParserExecute.JsonContentAnalyzer;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.JsonLogSqlAnalyzer;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlLexer;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser;
@@ -44,8 +53,6 @@ public class JsonLogQuerySqlParser {
 			JsonLogSqlAnalyzer jsonLogSqlAnalyzer = new JsonLogSqlAnalyzer();
 			walker.walk(jsonLogSqlAnalyzer, tree);
 			QueryExecutor queryExecutor = jsonLogSqlAnalyzer.queryExecutor;
-			// log.debug("queryExecutor selectPart:{}",
-			// queryExecutor.getSelectPart());
 			return queryExecutor;
 		} catch (Exception e) {
 			log.error("{} error while parser:" + jsonLogQuerySql, e);
@@ -72,9 +79,33 @@ public class JsonLogQuerySqlParser {
 					tokens);
 			ParseTree tree = parser.jsonFile();
 			ParseTreeWalker walker = new ParseTreeWalker();
-			com.extensions.logmonitor.jsonContentParseies.copy.JsonContentAnalyzer jsonLogSqlAnalyzer = new com.extensions.logmonitor.jsonContentParseies.copy.JsonContentAnalyzer(
-					queryExecutores);
+			JsonContentAnalyzer jsonLogSqlAnalyzer = new JsonContentAnalyzer(queryExecutores);
 			walker.walk(jsonLogSqlAnalyzer, tree);
+		} catch (IOException e) {
+			log.info("error while parser jsonLogString:{} ", e);
+		}
+	}
+
+	/**
+	 * @param queryExecutor
+	 * @param queryResultDataItem
+	 * @param jsonLogString
+	 */
+	public static void doJsonLogStrAnalyzer(List<QueryExecutor> queryExecutores) {
+		try {
+			// 词语、语法解析，生成抽象语法树
+			CharStream input = new UnbufferedCharStream(
+					new FileInputStream("/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles/test.log"));
+			jsonLexer lexer = new jsonLexer(input);
+			lexer.setTokenFactory(new CommonTokenFactory(true));
+			TokenStream tokens = new UnbufferedTokenStream<>(lexer);
+			jsonParser parser = new jsonParser(tokens);
+			parser.setBuildParseTree(false);
+			parser.jsonFile();
+			// ParseTreeWalker walker = new ParseTreeWalker();
+			// JsonContentAnalyzer jsonLogSqlAnalyzer = new
+			// JsonContentAnalyzer(queryExecutores);
+			// walker.walk(jsonLogSqlAnalyzer, tree);
 		} catch (IOException e) {
 			log.info("error while parser jsonLogString:{} ", e);
 		}
@@ -88,15 +119,16 @@ public class JsonLogQuerySqlParser {
 		List<QueryExecutor> executores = new ArrayList<>();
 		executores.add(executor);
 		executores.add(executor2);
+		// doJsonLogStrAnalyzer(executores);
 		JsonLogDataQueryHandler handler = new JsonLogDataQueryHandler(executores);
 		StopWatch watch = new StopWatch();
 		watch.start();
-		for (int i = 0; i < 1000000; i++) {
+		watch.split();
+		for (int i = 0; i < 10000; i++) {
 			handler.wirteString(LogDataCreator.createLogLines());
 		}
 		watch.stop();
 		System.out.println("all use time:" + watch.getTime());
-
 		for (QueryExecutor qe : executores) {
 			List<QueryResultDataItem> doHandle = qe.doHandle();
 			for (QueryResultDataItem qrdi : doHandle) {

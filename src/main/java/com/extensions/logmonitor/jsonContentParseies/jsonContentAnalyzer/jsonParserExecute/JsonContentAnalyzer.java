@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import com.extensions.logmonitor.jsonContentParseies.copy.QueryExecutorJsonWalker;
 import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonBaseListener;
 import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.ArrayPartContext;
 import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.FalseValueContext;
@@ -45,7 +44,6 @@ public class JsonContentAnalyzer extends jsonBaseListener {
 			queryExecutorWalker.add(walker);
 		}
 		this.config();
-		// System.out.println("init over!!!");
 	}
 
 	private void config() {

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.orderByDataCache.SingleOrderByDataCache;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupFilter;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderByDataItemWithObj;
 import com.extensions.logmonitor.util.GenericsUtils;
 
@@ -89,6 +90,15 @@ public class InnterQueryResultDataCache implements QueryResultDataCache {
 	@Override
 	public long allocateRecordId() {
 		return this.recordCount.getAndIncrement();
+	}
+
+	/* (non-Javadoc)
+	 * @see com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.QueryResultDataCache#setGroupHavingFilter(com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupFilter)
+	 */
+	@Override
+	public void setGroupHavingFilter(GroupFilter groupFilter) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
