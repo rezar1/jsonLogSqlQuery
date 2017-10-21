@@ -3,7 +3,6 @@ package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.QueryResultDataCache;
 import com.extensions.logmonitor.util.GenericsUtils;
 
 import lombok.Data;
@@ -19,7 +18,6 @@ import lombok.Data;
 @Data
 public abstract class BaseQueryExecute<T> implements QueryExecute<T> {
 
-	private QueryResultDataCache queryResultDtaCache;
 	protected String GROUPIDKEY = "GROUP_ID_KEY&&&&***&&";
 
 	/**
@@ -36,8 +34,12 @@ public abstract class BaseQueryExecute<T> implements QueryExecute<T> {
 	private String fieldName;
 	private String alias;
 
-	public void setQueryResultDataCache(QueryResultDataCache queryResultDtaCache) {
-		this.queryResultDtaCache = queryResultDtaCache;
+	/**
+	 * @param groupId
+	 * @return
+	 */
+	protected Long check(Long groupId) {
+		return groupId == null ? null : groupId.longValue();
 	}
 
 	@Override
@@ -88,7 +90,7 @@ public abstract class BaseQueryExecute<T> implements QueryExecute<T> {
 	 * @param groupId
 	 * @return
 	 */
-	private String getGroupIdStr(Long groupId) {
+	protected String getGroupIdStr(Long groupId) {
 		String groupStr = GROUPIDKEY; // by default
 		if (groupId != null) {
 			groupStr = String.valueOf(groupId);

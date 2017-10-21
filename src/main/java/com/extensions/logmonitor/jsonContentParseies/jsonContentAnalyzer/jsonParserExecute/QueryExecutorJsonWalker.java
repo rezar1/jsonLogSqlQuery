@@ -121,7 +121,7 @@ public class QueryExecutorJsonWalker {
 				executeWhereResult.put(optExecute, optSuccess);
 			}
 		}
-		this.invokeGroupByCheck(superPath, value);
+		// this.invokeGroupByCheck(superPath, value);
 	}
 
 	public void invokeGroupByCheck(String superPath, Object value) {
@@ -184,10 +184,10 @@ public class QueryExecutorJsonWalker {
 			return;
 		}
 		List<QueryExecute<? extends Object>> allQueryExecutes = groupExecutor.getFunExecuteWithSuperPath(superPath);
-		log.debug("having superPath:{} and allQueryExecutes:{} value:{}", superPath, allQueryExecutes, value);
 		if (GenericsUtils.isNullOrEmpty(allQueryExecutes)) {
 			return;
 		}
+		log.debug("having superPath:{} and allQueryExecutes:{} value:{}", superPath, allQueryExecutes, value);
 		for (QueryExecute<? extends Object> queryExecute : allQueryExecutes) {
 			queryCache.add(ExecuteLazy.newInstance(queryExecute, value, true));
 		}

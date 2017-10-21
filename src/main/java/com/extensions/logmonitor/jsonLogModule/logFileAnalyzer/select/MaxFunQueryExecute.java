@@ -4,6 +4,10 @@ import java.math.BigDecimal;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select.data.GroupFunData;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select.data.GroupFunData.DoInLockCallback;
+import com.extensions.logmonitor.util.LoadCache;
+
 /**
  * 
  * @say little Boy, don't be sad.
@@ -14,28 +18,40 @@ import org.apache.commons.lang.StringUtils;
  */
 public class MaxFunQueryExecute extends BaseQueryExecute<Object> {
 
-	private static final String PRE_VALUE_MAX = "PRE_VALUE_MAX";
+	private LoadCache<Long, GroupFunData<Object, Integer>> loadCache2 = new LoadCache<Long, GroupFunData<Object, Integer>>(
+			new LoadCache.InitValue<Long, GroupFunData<Object, Integer>>() {
+				@Override
+				public GroupFunData<Object, Integer> initValue(Long key) {
+					return new GroupFunData<Object, Integer>(null, 0);
+				}
+			});
 
 	@Override
-	public void execute(Object value, Long groupId) {
-		if (StringUtils.isNumeric(value.toString())) {
-			BigDecimal currentValue = new BigDecimal(value.toString());
-			BigDecimal preValue = takeResource(PRE_VALUE_MAX, new BigDecimal(0.0), groupId);
-			if (currentValue.compareTo(preValue) > 0) {
-				putResource(PRE_VALUE_MAX, currentValue, groupId);
+	public void execute(final Object value, Long groupId) {
+		final GroupFunData<Object, Integer> cache = loadCache2.getCache(check(groupId));
+		cache.safeSetDatas(new DoInLockCallback<Object, Integer>() {
+			@Override
+			public void doInLock(Object data1, Integer data2) {
+				if (StringUtils.isNumeric(value.toString())) {
+					BigDecimal currentValue = new BigDecimal(value.toString());
+					BigDecimal preValue = (BigDecimal) data1;
+					if (preValue == null || (currentValue.compareTo(preValue)) > 0) {
+						cache.unsafeSetDatas(currentValue, null);
+					}
+				} else if (value instanceof String) {
+					String currentValue = value.toString();
+					String preValue = (String) data1;
+					if (preValue == null || currentValue.compareTo(preValue) > 0) {
+						cache.unsafeSetDatas(currentValue, null);
+					}
+				}
 			}
-		} else if (value instanceof String) {
-			String currentValue = value.toString();
-			String preStrValue = takeResource(PRE_VALUE_MAX, "", groupId);
-			if (preStrValue.compareTo(currentValue) > 0) {
-				putResource(PRE_VALUE_MAX, currentValue, groupId);
-			}
-		}
+		});
 	}
 
 	@Override
 	public Object end(Long groupId) {
-		return super.takeResource(PRE_VALUE_MAX, null, groupId);
+		return loadCache2.getCache(groupId).safeReadDatas().first.toString();
 	}
 
 }

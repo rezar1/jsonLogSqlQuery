@@ -1,7 +1,5 @@
 package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select;
 
-import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.QueryResultDataCache;
-
 /**
  * 
  * @say little Boy, don't be sad.
@@ -14,7 +12,8 @@ public interface QueryExecute<T> {
 
 	public void execute(Object value, Long groupId);
 
-	public void setQueryResultDataCache(QueryResultDataCache queryResultDtaCache);
+	// public void setQueryResultDataCache(QueryResultDataCache
+	// queryResultDtaCache);
 
 	public T end(Long groupId);
 

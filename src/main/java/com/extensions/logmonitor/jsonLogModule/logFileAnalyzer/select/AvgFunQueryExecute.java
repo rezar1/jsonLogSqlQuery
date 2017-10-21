@@ -4,6 +4,11 @@ import java.math.BigDecimal;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDataCache.TwoTuple;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select.data.GroupFunData;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select.data.GroupFunData.DoInLockCallback;
+import com.extensions.logmonitor.util.LoadCache;
+
 /**
  * 
  * @say little Boy, don't be sad.
@@ -14,23 +19,33 @@ import org.apache.commons.lang.StringUtils;
  */
 public class AvgFunQueryExecute extends BaseQueryExecute<Object> {
 
-	private static final String PRE_VALUE_SUM = "PRE_VALUE_SUM";
-	private static final String PRE_VALUE_SIZE = "PRE_VALUE_AVG";
+	private LoadCache<Long, GroupFunData<BigDecimal, Integer>> loadCache = new LoadCache<Long, GroupFunData<BigDecimal, Integer>>(
+			new LoadCache.InitValue<Long, GroupFunData<BigDecimal, Integer>>() {
+				@Override
+				public GroupFunData<BigDecimal, Integer> initValue(Long key) {
+					return new GroupFunData<BigDecimal, Integer>(new BigDecimal("0.0"), 0);
+				}
+			});
 
 	@Override
-	public void execute(Object value, Long groupId) {
+	public void execute(final Object value, Long groupId) {
 		if (StringUtils.isNumeric(value.toString())) {
-			BigDecimal currentValue = new BigDecimal(value.toString());
-			BigDecimal preValue = takeResource(PRE_VALUE_SUM, new BigDecimal(0.0), groupId);
-			putResource(PRE_VALUE_SUM, currentValue.add(preValue), groupId);
-			putResource(PRE_VALUE_SIZE, takeResource(PRE_VALUE_SIZE, 0, groupId) + 1, groupId);
+			final GroupFunData<BigDecimal, Integer> avgDatas = this.loadCache.getCache(check(groupId));
+			avgDatas.safeSetDatas(new DoInLockCallback<BigDecimal, Integer>() {
+				@Override
+				public void doInLock(BigDecimal data1, Integer data2) {
+					data1.add(new BigDecimal(value.toString()));
+					data2 += 1;
+					avgDatas.unsafeSetDatas(data1, data2);
+				}
+			});
 		}
 	}
 
 	@Override
 	public Object end(Long groupId) {
-		BigDecimal sumValue = takeResource(PRE_VALUE_SUM, new BigDecimal(0.0), groupId);
-		Integer size = takeResource(PRE_VALUE_SUM, 1, groupId);
-		return sumValue.divide(new BigDecimal(size), 2);
+		TwoTuple<BigDecimal, Integer> safeReadDatas = this.loadCache.getCache(check(groupId)).safeReadDatas();
+		return safeReadDatas.first.divide(new BigDecimal(safeReadDatas.second), 2);
 	}
+
 }

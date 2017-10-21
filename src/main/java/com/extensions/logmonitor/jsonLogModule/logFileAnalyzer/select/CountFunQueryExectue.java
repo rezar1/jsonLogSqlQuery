@@ -1,8 +1,9 @@
 package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select;
 
-import com.extensions.logmonitor.util.BloomFilter;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import lombok.extern.slf4j.Slf4j;
+import com.extensions.logmonitor.util.BloomFilter;
+import com.extensions.logmonitor.util.LoadCache;
 
 /**
  * 
@@ -12,30 +13,33 @@ import lombok.extern.slf4j.Slf4j;
  * @Desc this guy is to lazy , noting left.
  *
  */
-@Slf4j
 public class CountFunQueryExectue extends BaseQueryExecute<Integer> {
 
 	private boolean distinct;
-
-	private final String BLOOMFILTERKEY = "BLOOMFILTERKEY";
-	private final String COUNTVALUEKEY = "COUNTVALUEKEY";
+	private BloomFilter bloomFilter = new BloomFilter();
+	private LoadCache<Long, AtomicInteger> loadCache = new LoadCache<Long, AtomicInteger>(
+			new LoadCache.InitValue<Long, AtomicInteger>() {
+				@Override
+				public AtomicInteger initValue(Long key) {
+					return new AtomicInteger(0);
+				}
+			});
 
 	@Override
 	public void execute(Object value, Long groupId) {
 		if (distinct) {
-			BloomFilter bloomFilter = super.takeResource(BLOOMFILTERKEY, new BloomFilter(), groupId);
-			if (bloomFilter.contains(value.toString())) {
-				return;
+			synchronized (groupId == null ? CountFunQueryExectue.class : groupId) {
+				if (bloomFilter.contains(value.toString())) {
+					return;
+				}
 			}
 		}
-		Integer takeResource = super.takeResource(COUNTVALUEKEY, 0, groupId);
-		log.debug("groupId:{} and age:{} ", groupId, takeResource);
-		super.putResource(COUNTVALUEKEY, takeResource + 1, groupId);
+		loadCache.getCache(check(groupId)).incrementAndGet();
 	}
 
 	@Override
 	public Integer end(Long groupId) {
-		return super.takeResource(COUNTVALUEKEY, null, groupId);
+		return loadCache.getCache(check(groupId)).get();
 	}
 
 	public void setDistinct(boolean distinct) {

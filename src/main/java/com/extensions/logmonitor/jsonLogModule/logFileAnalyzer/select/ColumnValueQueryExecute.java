@@ -10,16 +10,16 @@ package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select;
  */
 public class ColumnValueQueryExecute extends BaseQueryExecute<String> {
 
-	private static String currentColumnValueName = "currentColumnValueName";
+	private String value;
 
 	@Override
 	public void execute(Object value, Long groupId) {
-		super.putResource(currentColumnValueName, value, groupId);
+		this.value = value.toString();
 	}
 
 	@Override
 	public String end(Long groupId) {
-		return super.takeResource(currentColumnValueName, null, groupId).toString();
+		return this.value;
 	}
 
 }

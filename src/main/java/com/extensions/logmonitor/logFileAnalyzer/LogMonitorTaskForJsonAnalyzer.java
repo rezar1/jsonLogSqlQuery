@@ -105,7 +105,7 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 	 * @param curFilePointer
 	 */
 	private void handleLine(String currentLine, long curFilePointer) {
-		int indexOf = currentLine.indexOf("logEventType");
+		int indexOf = currentLine.indexOf("LogEventType");
 		if (indexOf == -1) {
 			return;
 		}
