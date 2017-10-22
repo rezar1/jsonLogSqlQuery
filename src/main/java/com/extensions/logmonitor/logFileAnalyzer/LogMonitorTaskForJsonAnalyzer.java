@@ -61,7 +61,7 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 				if (count == 1000000) {
 					watch.split();
 					count = 0;
-					System.out.println("handle 10000 Line use time:" + watch.getSplitTime());
+					System.out.println("handle 1000000 Line use time:" + watch.getSplitTime());
 				}
 			}
 			watch.stop();

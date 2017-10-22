@@ -16,7 +16,7 @@ public class JsonLogObj {
 	private String ip;
 	private String name;
 	private long age;
-	private String LogEventType;
+	private String logEventType;
 	private Address address;
 	private UserInfo userInfo;
 	private String time;
