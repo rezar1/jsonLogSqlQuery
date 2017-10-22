@@ -9,7 +9,7 @@ import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDa
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderByDataItemWithObj;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderType;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderTypeComparator;
-import com.extensions.logmonitor.util.sortUtils.ObjBinaryCacheWithBlockSize;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.sortExecute.ObjBinaryCacheWithBlockSize;
 
 /**
  * 
@@ -41,7 +41,7 @@ public class OutterFileOrderByDataCache implements SingleOrderByDataCache {
 		if (!tempFile.exists()) {
 			tempFile.mkdirs();
 		}
-		tempFile.deleteOnExit();
+		tempFile.deleteOnExit();// 子文件夹里面的文件需要先删除 TODO
 		this.objBinaryCacheWithBlockSize = new ObjBinaryCacheWithBlockSize<>(tempFile.getAbsolutePath(),
 				keySeriAndDeser, orderTypeComparator, OrderByDataItemWithObj.class);
 	}

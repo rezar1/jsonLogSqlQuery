@@ -20,7 +20,7 @@ import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.orderBy
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupFilter;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupIdContact;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderByDataItemWithObj;
-import com.extensions.logmonitor.util.sortUtils.FileStore2;
+import com.extensions.logmonitor.util.BinaryFileStore;
 import com.google.common.collect.Lists;
 
 /**
@@ -36,7 +36,7 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 	private AtomicInteger totalCount = new AtomicInteger(0);
 	private SingleOrderByDataCache orderByDataCache;
 
-	private FileStore2<QueryResultDataItem> fileStore;
+	private BinaryFileStore<QueryResultDataItem> fileStore;
 
 	private List<Long> orderByOffset = Lists.newArrayList();
 
@@ -126,7 +126,7 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 		}
 		tempFile.deleteOnExit();
 		tempFile.deleteOnExit();
-		fileStore = new FileStore2<>(tempFile, valueSeriAndDeser);
+		fileStore = new BinaryFileStore<>(tempFile, valueSeriAndDeser);
 		fileStore.open();
 	}
 

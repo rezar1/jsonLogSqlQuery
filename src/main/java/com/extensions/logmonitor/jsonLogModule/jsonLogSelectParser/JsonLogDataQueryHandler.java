@@ -31,10 +31,12 @@ public class JsonLogDataQueryHandler {
 
 	private ByteArrayOutputStream baos;
 	private List<QueryExecutor> queryExecutors;
+	private JsonContentAnalyzer jsonLogSqlAnalyzer;
 
 	public JsonLogDataQueryHandler(List<QueryExecutor> queryExecutors) {
 		this.baos = new ByteArrayOutputStream();
 		this.queryExecutors = queryExecutors;
+		this.jsonLogSqlAnalyzer = new JsonContentAnalyzer(queryExecutors);
 	}
 
 	public void wirteString(String lineLog) {
@@ -51,7 +53,6 @@ public class JsonLogDataQueryHandler {
 			jsonParser parser = new jsonParser(tokens);
 			ParseTree tree = parser.jsonFile();
 			ParseTreeWalker walker = new ParseTreeWalker();
-			JsonContentAnalyzer jsonLogSqlAnalyzer = new JsonContentAnalyzer(queryExecutors);
 			walker.walk(jsonLogSqlAnalyzer, tree);
 			bais.reset();
 			this.baos.reset();
