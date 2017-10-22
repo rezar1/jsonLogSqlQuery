@@ -32,9 +32,7 @@ public class OrderExecutor implements Clearable {
 	}
 
 	public OrderExecutor addOrderByDataItem(OrderByDataItemWithObj orderByDataItemWithObj) {
-		synchronized (this) {
-			this.getSingleOrderByDataCache().cacheRecord(orderByDataItemWithObj);
-		}
+		this.getSingleOrderByDataCache().cacheRecord(orderByDataItemWithObj);
 		return this;
 	}
 

@@ -49,22 +49,17 @@ public class GroupExecutor {
 		Map<OptExecute, Boolean> optExecuteResult = new HashMap<>();
 		Map<String, List<OptExecute>> optExecuteQuickVisitCache = this.groupWhereCondition
 				.getOptExecuteQuickVisitCache();
-		synchronized (String.valueOf("queryExexute_lock_" + queryReusltDataItem.getGroupId())) {
-			for (String queryPath : optExecuteQuickVisitCache.keySet()) {
-				for (OptExecute optExecute : optExecuteQuickVisitCache.get(queryPath)) {
-					Object value = this.havingOptExecuteToQueryMapper.get(optExecute)
-							.end(queryReusltDataItem.getGroupId());
-					boolean optSuccess = checkOptExecuteForGroupCondition(optExecute, value);
-					log.debug("optExecuteType:{} optExecute :{} and value:{} and optSuccess:{}",
-							optExecute.getClass().getSimpleName(), optExecute, value, optSuccess);
-					optExecuteResult.put(optExecute, optSuccess);
-				}
+		for (String queryPath : optExecuteQuickVisitCache.keySet()) {
+			for (OptExecute optExecute : optExecuteQuickVisitCache.get(queryPath)) {
+				Object value = this.havingOptExecuteToQueryMapper.get(optExecute).end(queryReusltDataItem.getGroupId());
+				boolean optSuccess = checkOptExecuteForGroupCondition(optExecute, value);
+				log.debug("optExecuteType:{} optExecute :{} and value:{} and optSuccess:{}",
+						optExecute.getClass().getSimpleName(), optExecute, value, optSuccess);
+				optExecuteResult.put(optExecute, optSuccess);
 			}
 		}
 		boolean checkWhereIsSuccess = this.groupWhereCondition.checkWhereIsSuccess(optExecuteResult);
-		synchronized (String.valueOf("write_lock_" + queryReusltDataItem.getGroupId())) {
-			this.groupFilter.havingResult(queryReusltDataItem.getGroupId(), !checkWhereIsSuccess);
-		}
+		this.groupFilter.havingResult(queryReusltDataItem.getGroupId(), !checkWhereIsSuccess);
 	}
 
 	/**
@@ -90,22 +85,18 @@ public class GroupExecutor {
 		Long groupId = gb.getHashValue();
 		GroupIdContact groupIdContact = null;
 		boolean isHasExists = false;
-		synchronized (String.valueOf("write_lock_" + groupId)) {
-			groupIdContact = this.groupFilter.findGroupIdContact(groupId);
-			isHasExists = groupIdContact != null;
-			if (!isHasExists) {
-				groupIdContact = new GroupIdContact(queryResultDataItem.getRecordId());
-				this.groupFilter.initGroupId(groupId, groupIdContact);
-			}
+		groupIdContact = this.groupFilter.findGroupIdContact(groupId);
+		isHasExists = groupIdContact != null;
+		if (!isHasExists) {
+			groupIdContact = new GroupIdContact(queryResultDataItem.getRecordId());
+			this.groupFilter.initGroupId(groupId, groupIdContact);
 		}
 		return TupleUtil.tuple(isHasExists, gb.getHashValue());
 	}
 
 	public void doWhereConditionQuery(QueryResultDataItem queryReusltDataItem, List<ExecuteLazy> executeLazys) {
-		synchronized (String.valueOf("queryExexute_lock_" + queryReusltDataItem.getGroupId())) {
-			for (ExecuteLazy executeLazy : executeLazys) {
-				executeLazy.duQuery(queryReusltDataItem);
-			}
+		for (ExecuteLazy executeLazy : executeLazys) {
+			executeLazy.duQuery(queryReusltDataItem);
 		}
 	}
 
