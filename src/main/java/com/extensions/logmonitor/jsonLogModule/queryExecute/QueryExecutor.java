@@ -85,4 +85,13 @@ public class QueryExecutor {
 		this.groupExecutor = new GroupExecutor();
 	}
 
+	/**
+	 * @param queryReusltDataItem
+	 */
+	public void cacheRecord(QueryResultDataItem queryReusltDataItem) {
+		synchronized (this) {
+			this.dataCache.cacheRecord(queryReusltDataItem);
+		}
+	}
+
 }

@@ -92,6 +92,9 @@ public class LogMonitorTaskTest {
 		LogMonitorTaskForJsonAnalyzer analyzer = new LogMonitorTaskForJsonAnalyzer(mockFilePointerProcessor,
 				logJsonAnalyzer);
 		analyzer.call();
+		/**
+		 * use time 376463 ms
+		 */
 	}
 
 	@Test

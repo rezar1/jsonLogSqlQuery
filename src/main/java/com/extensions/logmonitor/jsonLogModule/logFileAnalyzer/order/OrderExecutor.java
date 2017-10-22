@@ -9,8 +9,6 @@ import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.orderBy
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.orderByDataCache.SingleOrderByDataCache;
 import com.extensions.logmonitor.jsonLogModule.queryExecute.Clearable;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * 
  * @say little Boy, don't be sad.
@@ -19,27 +17,24 @@ import lombok.extern.slf4j.Slf4j;
  * @Desc this guy is to lazy , noting left.
  *
  */
-@Slf4j
 public class OrderExecutor implements Clearable {
 
 	// 系统配置
-	private volatile boolean triggerOutterSort;
 	private Map<String, OrderByItem> orderByItemMaps = new LinkedHashMap<>();
 	private Map<String, Integer> orderByItemIndexMaps = new LinkedHashMap<>();
 	private List<OrderType> orderTypes = new ArrayList<>();
 	private int itemIndex = 0;
 
-	// 实际分析日志时的缓存
-	private ThreadLocal<SingleOrderByDataCache> orderByDataCache = new ThreadLocal<SingleOrderByDataCache>() {
-		public SingleOrderByDataCache initialValue() {
-			OutterFileOrderByDataCache outterFileOrderByDataCache = new OutterFileOrderByDataCache();
-			outterFileOrderByDataCache.setOrderTypes(orderTypes);
-			return outterFileOrderByDataCache;
-		}
-	};
+	private SingleOrderByDataCache orderDataCache;
+
+	public OrderExecutor() {
+
+	}
 
 	public OrderExecutor addOrderByDataItem(OrderByDataItemWithObj orderByDataItemWithObj) {
-		orderByDataCache.get().cacheRecord(orderByDataItemWithObj);
+		synchronized (this) {
+			this.getSingleOrderByDataCache().cacheRecord(orderByDataItemWithObj);
+		}
 		return this;
 	}
 
@@ -50,14 +45,12 @@ public class OrderExecutor implements Clearable {
 		return this;
 	}
 
-	public void triggerOutterSort() {
-		this.triggerOutterSort = true;
-		log.info("triggerOutterSort -- :{}", triggerOutterSort);
-		// TODO change inner cache to outter cache
-	}
-
 	public SingleOrderByDataCache getSingleOrderByDataCache() {
-		return this.orderByDataCache.get();
+		if (this.orderDataCache == null) {
+			this.orderDataCache = new OutterFileOrderByDataCache();
+			this.orderDataCache.setOrderTypes(orderTypes);
+		}
+		return this.orderDataCache;
 	}
 
 	public int isOrderByField(String fieldPathName) {
@@ -70,7 +63,6 @@ public class OrderExecutor implements Clearable {
 
 	@Override
 	public void clearResource() {
-		this.orderByDataCache.remove();
 	}
 
 	/**
@@ -84,9 +76,7 @@ public class OrderExecutor implements Clearable {
 	 * 
 	 */
 	public void executeSort() {
-		SingleOrderByDataCache singleOrderByDataCache = this.orderByDataCache.get();
-		// singleOrderByDataCache.setOrderTypes(orderTypes);
-		singleOrderByDataCache.executeSort();
+		this.getSingleOrderByDataCache().executeSort();
 	}
 
 }

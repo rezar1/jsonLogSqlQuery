@@ -58,7 +58,7 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 				handleLine(currentLine, curFilePointer);
 				count++;
 				curFilePointer = randomAccessFile.getFilePointer();
-				if (count == 100000) {
+				if (count == 1000000) {
 					watch.split();
 					count = 0;
 					System.out.println("handle 10000 Line use time:" + watch.getSplitTime());
@@ -105,7 +105,7 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 	 * @param curFilePointer
 	 */
 	private void handleLine(String currentLine, long curFilePointer) {
-		int indexOf = currentLine.indexOf("LogEventType");
+		int indexOf = currentLine.indexOf("logEventType");
 		if (indexOf == -1) {
 			return;
 		}

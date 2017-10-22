@@ -60,12 +60,10 @@ public class JsonContentAnalyzer extends jsonBaseListener {
 
 	@Override
 	public void enterJsonFileRoot(JsonFileRootContext ctx) {
-		// System.out.println("entry jsonFile");
 	}
 
 	@Override
 	public void exitJsonFileRoot(JsonFileRootContext ctx) {
-		// System.out.println("exit jsonFile");
 	}
 
 	@Override
@@ -280,7 +278,6 @@ public class JsonContentAnalyzer extends jsonBaseListener {
 				walker.invokeJsonDataCondition(currentScope.getScopeName(), null);
 			}
 		});
-
 	}
 
 }

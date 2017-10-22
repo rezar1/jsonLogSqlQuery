@@ -4,6 +4,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -31,14 +35,38 @@ public class JsonLogDataQueryHandler {
 
 	private ByteArrayOutputStream baos;
 	private List<QueryExecutor> queryExecutors;
+	private LinkedBlockingQueue<String> lineLogQueue = new LinkedBlockingQueue<>();
+	private ExecutorService doHandlerPool = Executors.newFixedThreadPool(5);
+
+	private AtomicInteger totalCount = new AtomicInteger(0);
 
 	public JsonLogDataQueryHandler(List<QueryExecutor> queryExecutors) {
 		this.baos = new ByteArrayOutputStream();
 		this.queryExecutors = queryExecutors;
+		for (int i = 0; i < 5; i++) {
+			doHandlerPool.execute(new Runnable() {
+				@Override
+				public void run() {
+					// 10000000
+					String handleLineLog = null;
+					try {
+						while (totalCount.get() < 1000000 && (handleLineLog = lineLogQueue.take()) != null) {
+							// System.out.println("handleLineLog:" +
+							// handleLineLog);
+							doHandle(handleLineLog);
+							totalCount.incrementAndGet();
+						}
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+		}
 	}
 
 	public void wirteString(String lineLog) {
-		this.doHandle(lineLog);
+		// this.doHandle(lineLog);
+		this.lineLogQueue.offer(lineLog);
 	}
 
 	private void doHandle(String lineLog) {
@@ -61,6 +89,14 @@ public class JsonLogDataQueryHandler {
 	}
 
 	public void doAnalyzerResult() {
+		while (totalCount.get() < 10000000) {
+			try {
+				System.out.println("sleep !!!!!");
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 		for (QueryExecutor qe : this.queryExecutors) {
 			List<QueryResultDataItem> doHandle = qe.doHandle();
 			for (QueryResultDataItem qrdi : doHandle) {

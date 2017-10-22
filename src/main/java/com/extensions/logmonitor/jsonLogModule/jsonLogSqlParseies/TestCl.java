@@ -10,7 +10,6 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
-import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.WhereCondition;
 import com.extensions.logmonitor.jsonLogModule.queryExecute.QueryExecutor;
 
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +46,8 @@ public class TestCl {
 			log.info(tree.toStringTree(parser));
 			QueryExecutor queryExecutor = jsonLogSqlAnalyzer.queryExecutor;
 			log.info("queryExecutor selectPart:{}", queryExecutor.getSelectPart());
-			WhereCondition whereCondition = queryExecutor.getWhereCondition();
+			// WhereCondition whereCondition =
+			// queryExecutor.getWhereCondition();
 			// Map<String, List<OptExecute>> optExecuteQuickVisitCache =
 			// whereCondition.getOptExecuteQuickVisitCache();
 			// OptExecute optExecute =
@@ -70,7 +70,8 @@ public class TestCl {
 			// optExecuteQuickVisitCache.get("address");
 			// whereCondition.addWhereExecuteResult(optExecute6,
 			// optExecute6.OptSuccess(""));
-			log.info("executeResult:{}", whereCondition.checkWhereIsSuccess());
+			// log.info("executeResult:{}",
+			// whereCondition.checkWhereIsSuccess());
 			// log.info("fromLogTable:{}", queryExecutor.getFromTableLogName());
 		} catch (IOException e) {
 			e.printStackTrace();

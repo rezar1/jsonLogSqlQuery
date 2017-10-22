@@ -23,11 +23,6 @@ public class WhereCondition implements Clearable {
 	private MultiCondition conditionSuper;
 	private Map<String, List<OptExecute>> optExecuteQuickVisitCache = new HashMap<>();
 
-	private ThreadLocal<Map<OptExecute, Boolean>> executeWhereResult = new ThreadLocal<Map<OptExecute, Boolean>>() {
-		protected Map<OptExecute, Boolean> initialValue() {
-			return new HashMap<>();
-		}
-	};
 	private Semaphore semaphore = new Semaphore(1);
 
 	public WhereCondition setCondition(MultiCondition conditionSuper) {
@@ -47,19 +42,9 @@ public class WhereCondition implements Clearable {
 		return this;
 	}
 
-	public boolean checkWhereIsSuccess() {
-		log.debug("executeWhereResult:{}", this.executeWhereResult.get());
-		return this.conditionSuper.visitQuickCondition(this.executeWhereResult.get());
-	}
-
 	public boolean checkWhereIsSuccess(Map<OptExecute, Boolean> executeResult) {
-		log.debug("executeWhereResult:{}", this.executeWhereResult.get());
+		log.debug("executeWhereResult:{}", executeResult);
 		return this.conditionSuper.visitQuickCondition(executeResult);
-	}
-
-	public WhereCondition addWhereExecuteResult(OptExecute optExecute, Boolean boolResult) {
-		this.executeWhereResult.get().put(optExecute, boolResult);
-		return this;
 	}
 
 	public Map<String, List<OptExecute>> getOptExecuteQuickVisitCache() {
@@ -68,7 +53,6 @@ public class WhereCondition implements Clearable {
 
 	@Override
 	public void clearResource() {
-		this.executeWhereResult.remove();
 	}
 
 }

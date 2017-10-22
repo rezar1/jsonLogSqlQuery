@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.ExecuteLazy;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.QueryResultDataItem;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select.QueryExecute;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.OptExecute;
@@ -48,17 +49,22 @@ public class GroupExecutor {
 		Map<OptExecute, Boolean> optExecuteResult = new HashMap<>();
 		Map<String, List<OptExecute>> optExecuteQuickVisitCache = this.groupWhereCondition
 				.getOptExecuteQuickVisitCache();
-		for (String queryPath : optExecuteQuickVisitCache.keySet()) {
-			for (OptExecute optExecute : optExecuteQuickVisitCache.get(queryPath)) {
-				Object value = this.havingOptExecuteToQueryMapper.get(optExecute).end(queryReusltDataItem.getGroupId());
-				boolean optSuccess = checkOptExecuteForGroupCondition(optExecute, value);
-				log.debug("optExecuteType:{} optExecute :{} and value:{} and optSuccess:{}",
-						optExecute.getClass().getSimpleName(), optExecute, value, optSuccess);
-				optExecuteResult.put(optExecute, optSuccess);
+		synchronized (String.valueOf("queryExexute_lock_" + queryReusltDataItem.getGroupId())) {
+			for (String queryPath : optExecuteQuickVisitCache.keySet()) {
+				for (OptExecute optExecute : optExecuteQuickVisitCache.get(queryPath)) {
+					Object value = this.havingOptExecuteToQueryMapper.get(optExecute)
+							.end(queryReusltDataItem.getGroupId());
+					boolean optSuccess = checkOptExecuteForGroupCondition(optExecute, value);
+					log.debug("optExecuteType:{} optExecute :{} and value:{} and optSuccess:{}",
+							optExecute.getClass().getSimpleName(), optExecute, value, optSuccess);
+					optExecuteResult.put(optExecute, optSuccess);
+				}
 			}
 		}
 		boolean checkWhereIsSuccess = this.groupWhereCondition.checkWhereIsSuccess(optExecuteResult);
-		this.groupFilter.havingResult(queryReusltDataItem.getGroupId(), !checkWhereIsSuccess);
+		synchronized (String.valueOf("write_lock_" + queryReusltDataItem.getGroupId())) {
+			this.groupFilter.havingResult(queryReusltDataItem.getGroupId(), !checkWhereIsSuccess);
+		}
 	}
 
 	/**
@@ -82,13 +88,25 @@ public class GroupExecutor {
 			gb.addGroupByFieldValue(object);
 		}
 		Long groupId = gb.getHashValue();
-		GroupIdContact groupIdContact = this.groupFilter.findGroupIdContact(groupId);
-		boolean isHasExists = groupIdContact != null;
-		if (!isHasExists) {
-			groupIdContact = new GroupIdContact(queryResultDataItem.getRecordId());
-			this.groupFilter.initGroupId(groupId, groupIdContact);
+		GroupIdContact groupIdContact = null;
+		boolean isHasExists = false;
+		synchronized (String.valueOf("write_lock_" + groupId)) {
+			groupIdContact = this.groupFilter.findGroupIdContact(groupId);
+			isHasExists = groupIdContact != null;
+			if (!isHasExists) {
+				groupIdContact = new GroupIdContact(queryResultDataItem.getRecordId());
+				this.groupFilter.initGroupId(groupId, groupIdContact);
+			}
 		}
 		return TupleUtil.tuple(isHasExists, gb.getHashValue());
+	}
+
+	public void doWhereConditionQuery(QueryResultDataItem queryReusltDataItem, List<ExecuteLazy> executeLazys) {
+		synchronized (String.valueOf("queryExexute_lock_" + queryReusltDataItem.getGroupId())) {
+			for (ExecuteLazy executeLazy : executeLazys) {
+				executeLazy.duQuery(queryReusltDataItem);
+			}
+		}
 	}
 
 	/**
