@@ -103,6 +103,12 @@ public class QueryExecutorJsonWalker {
 					// 处理排序
 					if (this.queryExecutor.getOrderExecutor() != null && this.orderByDataItemWithObj != null) {
 						this.orderByDataItemWithObj.setRecordId(this.queryReusltDataItem.getRecordId());
+						OrderExecutor orderExecutor = this.queryExecutor.getOrderExecutor();
+						int index = 0;
+						Map<String, Object> queryResult = this.queryReusltDataItem.getQueryResult();
+						for (String path : orderExecutor.orderByPath()) {
+							this.orderByDataItemWithObj.addCacheData(index++, queryResult.get(path));
+						}
 						this.queryExecutor.getOrderExecutor().addOrderByDataItem(orderByDataItemWithObj);
 					}
 				}
@@ -128,28 +134,33 @@ public class QueryExecutorJsonWalker {
 		}
 	}
 
-	public void invokeOrderBy(String fieldName, Object value) {
-		OrderExecutor orderExecutor = this.queryExecutor.getOrderExecutor();
-		if (orderExecutor == null) {
-			return;
-		}
-		int orderByFieldIndex = orderExecutor.isOrderByField(fieldName);
-		log.debug("orderByIndex:{} for fieldName:{} and value:{}", orderByFieldIndex, fieldName, value);
-		if (orderByFieldIndex != -1) {
-			this.orderByDataItemWithObj.addCacheData(orderByFieldIndex, value);
-		}
-	}
+	// public void invokeOrderBy(String fieldName, Object value) {
+	// OrderExecutor orderExecutor = this.queryExecutor.getOrderExecutor();
+	// if (orderExecutor == null) {
+	// return;
+	// }
+	// int orderByFieldIndex = orderExecutor.isOrderByField(fieldName);
+	// log.debug("orderByIndex:{} for fieldName:{} and value:{}",
+	// orderByFieldIndex, fieldName, value);
+	// if (orderByFieldIndex != -1) {
+	// this.orderByDataItemWithObj.addCacheData(orderByFieldIndex, value);
+	// }
+	// }
 
 	public void invokeJsonDataQuery(String superPath, Object value) {
 		this.invokeJsonDataQuery(superPath, value, false);
 	}
 
 	public void invokeJsonDataQuery(String superPath, Object value, boolean notNeedFunCall) {
-		QueryExecute<? extends Object> queryExecuteWithSuperPath = this.queryExecutor.getSelectPart()
-				.getQueryExecuteWithSuperPath(superPath);
+		List<QueryExecute<? extends Object>> queryExecuteWithSuperPath = this.queryExecutor.getSelectPart()
+				.getAllQueryExecuteWithSuperPath(superPath);
 		if (queryExecuteWithSuperPath != null) {
-			log.debug("superPath:{} and queryExecute:{} value:{} ", superPath, queryExecuteWithSuperPath, value);
-			queryCache.add(ExecuteLazy.newInstance(queryExecuteWithSuperPath, value));
+			if (GenericsUtils.notNullAndEmpty(queryExecuteWithSuperPath)) {
+				for (QueryExecute<? extends Object> queryExecute : queryExecuteWithSuperPath) {
+					log.debug("superPath:{} and queryExecute:{} value:{} ", superPath, queryExecute, value);
+					queryCache.add(ExecuteLazy.newInstance(queryExecute, value));
+				}
+			}
 		}
 		if (!notNeedFunCall) {
 			List<QueryExecute<? extends Object>> allQueryExecutes = this.queryExecutor.getSelectPart()

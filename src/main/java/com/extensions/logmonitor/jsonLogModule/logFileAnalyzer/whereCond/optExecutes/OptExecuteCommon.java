@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.extensions.logmonitor.exceptions.WrongMatchTypeException;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.OptExecute;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert.ValueConvert;
 import com.extensions.logmonitor.util.GenericsUtils;
 import com.extensions.logmonitor.util.LoadCache;
 import com.extensions.logmonitor.util.LoadCache.InitValue;
@@ -33,6 +34,7 @@ public abstract class OptExecuteCommon<M> implements OptExecute {
 	protected M matchValue;
 	private boolean isArray;
 	private String matchPath;
+	private ValueConvert valueConvert;
 
 	/**
 	* 
@@ -52,6 +54,11 @@ public abstract class OptExecuteCommon<M> implements OptExecute {
 		return this.matchPath;
 	}
 
+	@Override
+	public void setValueConvert(ValueConvert valueConvert) {
+		this.valueConvert = valueConvert;
+	}
+
 	/**
 	 * @return
 	 */
@@ -62,6 +69,9 @@ public abstract class OptExecuteCommon<M> implements OptExecute {
 		log.debug("{} and matchValue is:{} ", this.toString(), value);
 		if (this.matchValue == null) {
 			return compareAsNull(value);
+		}
+		if (this.valueConvert != null) {
+			value = this.valueConvert.convert(value);
 		}
 		if (this.isArray) {
 			return compareAsArray(value);

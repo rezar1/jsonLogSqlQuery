@@ -48,7 +48,7 @@ public class LogMonitorTaskTest {
 		// "select name,age,sum(age) as ageSum ,count(age) as ageCount from
 		// testJson where age between 50 and 95 group by age");
 		SearchInfo searchInfo = new SearchInfo(
-				"select name,age from testJson where age between 50 and 95 order by age desc limit 0,100");
+				"select name,age,day('yyyy-MM-dd HH:mm:ss SSS',time) as time from testJson where age between 50 and 95 order by time asc limit 0,100");
 		logJsonAnalyzer.addSearchInfo(searchInfo);
 		LogMonitorTaskForJsonAnalyzer analyzer = new LogMonitorTaskForJsonAnalyzer(mockFilePointerProcessor,
 				logJsonAnalyzer);
@@ -87,7 +87,7 @@ public class LogMonitorTaskTest {
 		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("TestLog",
 				"/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles", "test.log");
 		SearchInfo searchInfo = new SearchInfo(
-				"select name,age,sum(age) as ageSum ,count(age) as ageCount from testJson where age between 50 and 95 group by age");
+				"select day('yyyy-MM-dd HH:mm:ss SSS',time) as dayOfTime,hour('yyyy-MM-dd HH:mm:ss SSS',time) as hourOfDay,count(age) as ageCount from testJson where age between 50 and 95 group by dayOfTime,hourOfDay");
 		logJsonAnalyzer.addSearchInfo(searchInfo);
 		LogMonitorTaskForJsonAnalyzer analyzer = new LogMonitorTaskForJsonAnalyzer(mockFilePointerProcessor,
 				logJsonAnalyzer);

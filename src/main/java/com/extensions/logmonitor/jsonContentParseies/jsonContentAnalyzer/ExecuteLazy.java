@@ -33,7 +33,7 @@ public class ExecuteLazy {
 		if (!isGroup) {
 			try {
 				Object value = this.queryExecute.end(queryResultDataItem.getGroupId());
-				queryResultDataItem.putQueyrResult(getFieldPath(), value);
+				queryResultDataItem.putQueyrResult(this.queryExecute.getShowName(), value);
 			} finally {
 				this.queryExecute.clearResource();
 			}
@@ -44,9 +44,9 @@ public class ExecuteLazy {
 		return this.isGroup;
 	}
 
-	public String getFieldPath() {
-		return this.queryExecute.getQueryPathWithFieldName();
-	}
+	// public String getFieldPath() {
+	// return this.queryExecute.getQueryPathWithFieldName();
+	// }
 
 	public static ExecuteLazy newInstance(QueryExecute<? extends Object> queryExecute, Object value) {
 		return new ExecuteLazy(queryExecute, value, false);

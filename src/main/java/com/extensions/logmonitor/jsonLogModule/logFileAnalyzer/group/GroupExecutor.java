@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.ExecuteLazy;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.QueryResultDataItem;
@@ -29,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GroupExecutor {
 
 	// 系统配置
-	private List<String> groupByPaths = new ArrayList<>();
+	private List<GroupByItem> groupByPaths = new ArrayList<>();
 	private WhereCondition groupWhereCondition;
 	// 针对列上的分组函数
 	private Map<String, List<QueryExecute<? extends Object>>> havingGroupFunQuery = new HashMap<>();
@@ -38,6 +39,16 @@ public class GroupExecutor {
 	private boolean needHaving;
 
 	private GroupFilter groupFilter = new BtreeGroupFilter();
+
+	/**
+	 * @param antrlParseFieldPaths
+	 */
+	public void fillParseFieldPaths(Set<String> antrlParseFieldPaths) {
+		for (GroupByItem gb : this.groupByPaths) {
+			antrlParseFieldPaths.add(gb.getGroupByPath());
+		}
+		antrlParseFieldPaths.addAll(havingGroupFunQuery.keySet());
+	}
 
 	/**
 	 * @param queryReusltDataItem
@@ -78,8 +89,11 @@ public class GroupExecutor {
 	public TwoTuple<Boolean, Long> putQueryResultDataItem(QueryResultDataItem queryResultDataItem) {
 		Map<String, Object> queryResult = queryResultDataItem.getQueryResult();
 		GroupByKey gb = new GroupByKey();
-		for (String groupByItem : this.groupByPaths) {
-			Object object = queryResult.get(groupByItem);
+		for (GroupByItem groupByItem : this.groupByPaths) {
+			Object object = queryResult.get(groupByItem.getGroupByPath());
+			if (groupByItem.getValueConvert() != null) {
+				object = groupByItem.getValueConvert().convert(object);
+			}
 			gb.addGroupByFieldValue(object);
 		}
 		Long groupId = gb.getHashValue();
@@ -106,7 +120,7 @@ public class GroupExecutor {
 	 * @param groupByItem
 	 * @return
 	 */
-	public GroupExecutor addOrderByItem(String groupByItem) {
+	public GroupExecutor addOrderByItem(GroupByItem groupByItem) {
 		groupByPaths.add(groupByItem);
 		return this;
 	}
@@ -120,7 +134,7 @@ public class GroupExecutor {
 		return this.groupWhereCondition;
 	}
 
-	public List<String> getGroupByItem() {
+	public List<GroupByItem> getGroupByItem() {
 		return this.groupByPaths;
 	}
 

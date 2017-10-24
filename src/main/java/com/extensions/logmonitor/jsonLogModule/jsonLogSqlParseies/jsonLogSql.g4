@@ -525,7 +525,7 @@ simple_expr
 	| expression_list ;
 
 function_call
-	: (  functionList ( LPAREN (expression (COMMA expression)*)? RPAREN ) ?  )
+	: (  functionList ( LPAREN (column_spec (COMMA column_spec)*)? RPAREN ) ?  )
 	| (  group_functions LPAREN ( ASTERISK | ALL | DISTINCT )? (simple_expr|'*') RPAREN  ) ;
 
 column_spec

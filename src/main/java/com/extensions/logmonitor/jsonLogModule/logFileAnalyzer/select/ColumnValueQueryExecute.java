@@ -14,7 +14,9 @@ public class ColumnValueQueryExecute extends BaseQueryExecute<String> {
 
 	@Override
 	public void execute(Object value, Long groupId) {
-		this.value = value.toString();
+		if (value != null) {
+			this.value = super.convertValue(value).toString();
+		}
 	}
 
 	@Override

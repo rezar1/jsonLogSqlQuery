@@ -3,6 +3,7 @@ package com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonPa
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
@@ -22,9 +23,14 @@ import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonSco
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonScope.JsonSuperScope;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonScope.ObjPairKeyValueScope;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonScope.ObjectScope;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupExecutor;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderExecutor;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.scopes.Scope;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select.SelectPart;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.WhereCondition;
 import com.extensions.logmonitor.jsonLogModule.queryExecute.QueryExecutor;
 import com.extensions.logmonitor.util.StrUtils;
+import com.google.common.collect.Sets;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,14 +42,41 @@ public class JsonContentAnalyzer extends jsonBaseListener {
 	private Scope currentScope;
 
 	private List<QueryExecutorJsonWalker> queryExecutorWalker;
+	private Set<String> antrlParseFieldPaths = Sets.newHashSet();
 
 	public JsonContentAnalyzer(List<QueryExecutor> queryExecutors) {
 		this.queryExecutorWalker = new ArrayList<>(queryExecutors.size());
 		for (QueryExecutor qe : queryExecutors) {
+			takeParseFieldPaths(qe);
 			QueryExecutorJsonWalker walker = new QueryExecutorJsonWalker(qe);
 			queryExecutorWalker.add(walker);
 		}
 		this.config();
+	}
+
+	/**
+	 * @param qe
+	 */
+	private void takeParseFieldPaths(QueryExecutor qe) {
+		SelectPart selectPart = qe.getSelectPart();
+		selectPart.fillParseFieldPaths(this.antrlParseFieldPaths);
+		WhereCondition whereCondition = qe.getWhereCondition();
+		if (whereCondition != null) {
+			whereCondition.fillParseFieldPaths(this.antrlParseFieldPaths);
+		}
+		OrderExecutor orderExecutor = qe.getOrderExecutor();
+		if (orderExecutor != null) {
+			orderExecutor.fillParseFieldPaths(this.antrlParseFieldPaths);
+		}
+		GroupExecutor groupExecutor = qe.getGroupExecutor();
+		if (groupExecutor != null) {
+			groupExecutor.fillParseFieldPaths(this.antrlParseFieldPaths);
+		}
+	}
+
+	public boolean checkNeedDoParse(String currentParsePath) {
+		
+		return false;
 	}
 
 	private void config() {
@@ -145,14 +178,15 @@ public class JsonContentAnalyzer extends jsonBaseListener {
 	public void exitStringValue(final StringValueContext ctx) {
 		log.debug("{} and currentPath:{}", "exitStringValue", currentScope.getScopeName());
 		final String text = ctx.STRING().getText();
-		if (currentScope instanceof ObjPairKeyValueScope) {
-			doInWalkers(new DoInWalker() {
-				@Override
-				public void walk(QueryExecutorJsonWalker walker) {
-					walker.invokeOrderBy(currentScope.getScopeName(), StrUtils.removeCommon(text));
-				}
-			});
-		}
+		// if (currentScope instanceof ObjPairKeyValueScope) {
+		// doInWalkers(new DoInWalker() {
+		// @Override
+		// public void walk(QueryExecutorJsonWalker walker) {
+		// walker.invokeOrderBy(currentScope.getScopeName(),
+		// StrUtils.removeCommon(text));
+		// }
+		// });
+		// }
 		doInWalkers(new DoInWalker() {
 			@Override
 			public void walk(QueryExecutorJsonWalker walker) {
@@ -181,14 +215,14 @@ public class JsonContentAnalyzer extends jsonBaseListener {
 		} else {
 			numValue.set(numberBig.intValue());
 		}
-		if (currentScope instanceof ObjPairKeyValueScope) {
-			doInWalkers(new DoInWalker() {
-				@Override
-				public void walk(QueryExecutorJsonWalker walker) {
-					walker.invokeOrderBy(currentScope.getScopeName(), numValue.get());
-				}
-			});
-		}
+		// if (currentScope instanceof ObjPairKeyValueScope) {
+		// doInWalkers(new DoInWalker() {
+		// @Override
+		// public void walk(QueryExecutorJsonWalker walker) {
+		// walker.invokeOrderBy(currentScope.getScopeName(), numValue.get());
+		// }
+		// });
+		// }
 		doInWalkers(new DoInWalker() {
 			@Override
 			public void walk(QueryExecutorJsonWalker walker) {
@@ -207,14 +241,14 @@ public class JsonContentAnalyzer extends jsonBaseListener {
 	@Override
 	public void exitTrueValue(final TrueValueContext ctx) {
 		log.debug("{} and currentPath:{}", "exitTrueValue", currentScope.getScopeName());
-		if (currentScope instanceof ObjPairKeyValueScope) {
-			doInWalkers(new DoInWalker() {
-				@Override
-				public void walk(QueryExecutorJsonWalker walker) {
-					walker.invokeOrderBy(currentScope.getScopeName(), true);
-				}
-			});
-		}
+		// if (currentScope instanceof ObjPairKeyValueScope) {
+		// doInWalkers(new DoInWalker() {
+		// @Override
+		// public void walk(QueryExecutorJsonWalker walker) {
+		// walker.invokeOrderBy(currentScope.getScopeName(), true);
+		// }
+		// });
+		// }
 		doInWalkers(new DoInWalker() {
 			@Override
 			public void walk(QueryExecutorJsonWalker walker) {
@@ -232,14 +266,14 @@ public class JsonContentAnalyzer extends jsonBaseListener {
 	@Override
 	public void exitFalseValue(final FalseValueContext ctx) {
 		log.debug("{} and currentPath:{}", "exitFalseValue", currentScope.getScopeName());
-		if (currentScope instanceof ObjPairKeyValueScope) {
-			doInWalkers(new DoInWalker() {
-				@Override
-				public void walk(QueryExecutorJsonWalker walker) {
-					walker.invokeOrderBy(currentScope.getScopeName(), false);
-				}
-			});
-		}
+		// if (currentScope instanceof ObjPairKeyValueScope) {
+		// doInWalkers(new DoInWalker() {
+		// @Override
+		// public void walk(QueryExecutorJsonWalker walker) {
+		// walker.invokeOrderBy(currentScope.getScopeName(), false);
+		// }
+		// });
+		// }
 		doInWalkers(new DoInWalker() {
 			@Override
 			public void walk(QueryExecutorJsonWalker walker) {
@@ -257,14 +291,14 @@ public class JsonContentAnalyzer extends jsonBaseListener {
 	@Override
 	public void exitNullValue(final NullValueContext ctx) {
 		log.debug("{} and currentPath:{}", "exitNullValue", currentScope.getScopeName());
-		if (currentScope instanceof ObjPairKeyValueScope) {
-			doInWalkers(new DoInWalker() {
-				@Override
-				public void walk(QueryExecutorJsonWalker walker) {
-					walker.invokeOrderBy(currentScope.getScopeName(), null);
-				}
-			});
-		}
+		// if (currentScope instanceof ObjPairKeyValueScope) {
+		// doInWalkers(new DoInWalker() {
+		// @Override
+		// public void walk(QueryExecutorJsonWalker walker) {
+		// walker.invokeOrderBy(currentScope.getScopeName(), null);
+		// }
+		// });
+		// }
 		doInWalkers(new DoInWalker() {
 			@Override
 			public void walk(QueryExecutorJsonWalker walker) {

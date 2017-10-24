@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 import com.extensions.logmonitor.jsonLogModule.queryExecute.Clearable;
@@ -40,6 +41,13 @@ public class WhereCondition implements Clearable {
 			this.semaphore.release();
 		}
 		return this;
+	}
+
+	/**
+	 * @param antrlParseFieldPaths
+	 */
+	public void fillParseFieldPaths(Set<String> antrlParseFieldPaths) {
+		antrlParseFieldPaths.addAll(this.optExecuteQuickVisitCache.keySet());
 	}
 
 	public boolean checkWhereIsSuccess(Map<OptExecute, Boolean> executeResult) {

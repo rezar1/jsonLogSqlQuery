@@ -1,5 +1,7 @@
 package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group;
 
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert.ValueConvert;
+
 import lombok.Data;
 
 /**
@@ -13,4 +15,15 @@ import lombok.Data;
 @Data
 public class GroupByItem {
 	private String groupByPath;
+	private ValueConvert valueConvert;
+
+	public GroupByItem(String groupByPath) {
+		this(groupByPath, null);
+	}
+
+	public GroupByItem(String groupByPath, ValueConvert valueConvert) {
+		this.groupByPath = groupByPath;
+		this.valueConvert = valueConvert;
+	}
+
 }

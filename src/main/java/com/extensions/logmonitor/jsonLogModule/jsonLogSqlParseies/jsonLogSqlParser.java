@@ -1878,11 +1878,11 @@ public class jsonLogSqlParser extends Parser {
 		}
 		public TerminalNode LPAREN() { return getToken(jsonLogSqlParser.LPAREN, 0); }
 		public TerminalNode RPAREN() { return getToken(jsonLogSqlParser.RPAREN, 0); }
-		public List<ExpressionContext> expression() {
-			return getRuleContexts(ExpressionContext.class);
+		public List<Column_specContext> column_spec() {
+			return getRuleContexts(Column_specContext.class);
 		}
-		public ExpressionContext expression(int i) {
-			return getRuleContext(ExpressionContext.class,i);
+		public Column_specContext column_spec(int i) {
+			return getRuleContext(Column_specContext.class,i);
 		}
 		public List<TerminalNode> COMMA() { return getTokens(jsonLogSqlParser.COMMA); }
 		public TerminalNode COMMA(int i) {
@@ -1937,10 +1937,10 @@ public class jsonLogSqlParser extends Parser {
 					match(LPAREN);
 					setState(254);
 					_la = _input.LA(1);
-					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << TRUE) | (1L << FALSE) | (1L << ALL) | (1L << NOT) | (1L << LIKE) | (1L << IF) | (1L << EXISTS) | (1L << ASC) | (1L << DESC) | (1L << ORDER) | (1L << GROUP) | (1L << BY) | (1L << HAVING) | (1L << WHERE) | (1L << FROM) | (1L << AS) | (1L << SELECT) | (1L << DISTINCT) | (1L << IS) | (1L << NULL) | (1L << ADD) | (1L << BETWEEN) | (1L << DAY) | (1L << HOUR) | (1L << MINUTE) | (1L << MONTH) | (1L << SECOND) | (1L << YEAR) | (1L << AVG) | (1L << COUNT) | (1L << MAX) | (1L << MIN) | (1L << SUM) | (1L << DIVIDE) | (1L << MOD) | (1L << OR) | (1L << AND) | (1L << XOR) | (1L << EQ) | (1L << NOT_EQ) | (1L << LET) | (1L << GET) | (1L << SET_VAR) | (1L << SHIFT_LEFT) | (1L << SHIFT_RIGHT) | (1L << LPAREN) | (1L << PLUS) | (1L << MINUS))) != 0) || ((((_la - 69)) & ~0x3f) == 0 && ((1L << (_la - 69)) & ((1L << (INTEGER_NUM - 69)) | (1L << (HEX_DIGIT - 69)) | (1L << (BIT_NUM - 69)) | (1L << (REAL_NUMBER - 69)) | (1L << (TEXT_STRING - 69)) | (1L << (ID - 69)))) != 0)) {
+					if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << TRUE) | (1L << FALSE) | (1L << ALL) | (1L << NOT) | (1L << LIKE) | (1L << IF) | (1L << EXISTS) | (1L << ASC) | (1L << DESC) | (1L << ORDER) | (1L << GROUP) | (1L << BY) | (1L << HAVING) | (1L << WHERE) | (1L << FROM) | (1L << AS) | (1L << SELECT) | (1L << DISTINCT) | (1L << IS) | (1L << NULL) | (1L << ADD) | (1L << BETWEEN) | (1L << AVG) | (1L << COUNT) | (1L << MAX) | (1L << MIN) | (1L << SUM) | (1L << DIVIDE) | (1L << MOD) | (1L << OR) | (1L << AND) | (1L << XOR) | (1L << EQ) | (1L << NOT_EQ) | (1L << LET) | (1L << GET) | (1L << SET_VAR) | (1L << SHIFT_LEFT) | (1L << SHIFT_RIGHT))) != 0) || _la==TEXT_STRING || _la==ID) {
 						{
 						setState(246);
-						expression();
+						column_spec();
 						setState(251);
 						_errHandler.sync(this);
 						_la = _input.LA(1);
@@ -1950,7 +1950,7 @@ public class jsonLogSqlParser extends Parser {
 							setState(247);
 							match(COMMA);
 							setState(248);
-							expression();
+							column_spec();
 							}
 							}
 							setState(253);
@@ -3418,9 +3418,9 @@ public class jsonLogSqlParser extends Parser {
 		"\u00f0\u00f5\5\24\13\2\u00f1\u00f5\5\62\32\2\u00f2\u00f5\5\60\31\2\u00f3"+
 		"\u00f5\5\64\33\2\u00f4\u00f0\3\2\2\2\u00f4\u00f1\3\2\2\2\u00f4\u00f2\3"+
 		"\2\2\2\u00f4\u00f3\3\2\2\2\u00f5/\3\2\2\2\u00f6\u0103\5\26\f\2\u00f7\u0100"+
-		"\7;\2\2\u00f8\u00fd\5&\24\2\u00f9\u00fa\78\2\2\u00fa\u00fc\5&\24\2\u00fb"+
-		"\u00f9\3\2\2\2\u00fc\u00ff\3\2\2\2\u00fd\u00fb\3\2\2\2\u00fd\u00fe\3\2"+
-		"\2\2\u00fe\u0101\3\2\2\2\u00ff\u00fd\3\2\2\2\u0100\u00f8\3\2\2\2\u0100"+
+		"\7;\2\2\u00f8\u00fd\5\62\32\2\u00f9\u00fa\78\2\2\u00fa\u00fc\5\62\32\2"+
+		"\u00fb\u00f9\3\2\2\2\u00fc\u00ff\3\2\2\2\u00fd\u00fb\3\2\2\2\u00fd\u00fe"+
+		"\3\2\2\2\u00fe\u0101\3\2\2\2\u00ff\u00fd\3\2\2\2\u0100\u00f8\3\2\2\2\u0100"+
 		"\u0101\3\2\2\2\u0101\u0102\3\2\2\2\u0102\u0104\7:\2\2\u0103\u00f7\3\2"+
 		"\2\2\u0103\u0104\3\2\2\2\u0104\u0111\3\2\2\2\u0105\u0106\5\32\16\2\u0106"+
 		"\u0108\7;\2\2\u0107\u0109\t\t\2\2\u0108\u0107\3\2\2\2\u0108\u0109\3\2"+

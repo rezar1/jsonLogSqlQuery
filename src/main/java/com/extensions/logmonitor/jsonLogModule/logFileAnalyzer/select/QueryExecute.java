@@ -1,5 +1,7 @@
 package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select;
 
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert.ValueConvert;
+
 /**
  * 
  * @say little Boy, don't be sad.
@@ -28,6 +30,8 @@ public interface QueryExecute<T> {
 	public String getFieldName();
 
 	public String getQueryPathWithFieldName();
+
+	public void setValueConvert(ValueConvert valueConvert);
 
 	public void clearResource();
 

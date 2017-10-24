@@ -1,5 +1,7 @@
 package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond;
 
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert.ValueConvert;
+
 /**
  * 
  * @say little Boy, don't be sad.
@@ -35,5 +37,7 @@ public interface OptExecute {
 	public void setMatchPath(String path);
 
 	public String getMatchPath();
+
+	public void setValueConvert(ValueConvert valueConvert);
 
 }

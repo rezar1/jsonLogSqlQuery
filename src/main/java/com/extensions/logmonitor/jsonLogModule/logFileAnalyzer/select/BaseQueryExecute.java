@@ -3,6 +3,7 @@ package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert.ValueConvert;
 import com.extensions.logmonitor.util.GenericsUtils;
 
 import lombok.Data;
@@ -33,6 +34,19 @@ public abstract class BaseQueryExecute<T> implements QueryExecute<T> {
 	private String querySuperPath;
 	private String fieldName;
 	private String alias;
+	private ValueConvert valueConvert;
+
+	public void setValueConvert(ValueConvert valueConvert) {
+		this.valueConvert = valueConvert;
+	}
+
+	protected Object convertValue(Object value) {
+		if (this.valueConvert != null && value != null) {
+			return this.valueConvert.convert(value);
+		} else {
+			return value;
+		}
+	}
 
 	/**
 	 * @param groupId
@@ -70,7 +84,7 @@ public abstract class BaseQueryExecute<T> implements QueryExecute<T> {
 	public String getQueryPathWithFieldName() {
 		return (GenericsUtils.notNullAndEmpty(this.querySuperPath) ? this.querySuperPath + "." : "") + this.fieldName;
 	}
-
+	
 	protected BaseQueryExecute<T> putResource(String resourceKey, Object value, Long groupId) {
 		getResourceMap(groupId).put(resourceKey, value);
 		return this;
