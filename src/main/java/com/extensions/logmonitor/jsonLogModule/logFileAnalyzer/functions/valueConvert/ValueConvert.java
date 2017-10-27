@@ -1,4 +1,4 @@
-package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert;
+package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.valueConvert;
 
 /**
  * 

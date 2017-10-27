@@ -1,6 +1,6 @@
 package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group;
 
-import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert.ValueConvert;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.valueConvert.ValueConvert;
 
 import lombok.Data;
 

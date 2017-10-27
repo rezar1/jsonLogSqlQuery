@@ -1,6 +1,7 @@
 package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,8 +27,9 @@ public class SelectPart {
 	private boolean distinct;
 	private int querySize;
 
-	private Map<String, List<QueryExecute<? extends Object>>> queryExecuteCache = new HashMap<>();
-	private Map<String, List<QueryExecute<? extends Object>>> multiFunQueryExecute = new HashMap<>();
+	private List<QueryExecute<? extends Object>> allQueryExecute = new ArrayList<>();
+	private Map<String, List<QueryExecute<? extends Object>>> queryExecuteCache = new LinkedHashMap<>();
+	private Map<String, List<QueryExecute<? extends Object>>> multiFunQueryExecute = new LinkedHashMap<>();
 
 	public void fillAllFunQuery(List<QueryResultDataItem> cacheRecord) {
 		for (QueryResultDataItem qrdi : cacheRecord) {
@@ -53,13 +55,13 @@ public class SelectPart {
 	public void fillParseFieldPaths(Set<String> antrlParseFieldPaths) {
 		antrlParseFieldPaths.addAll(this.queryExecuteCache.keySet());
 		antrlParseFieldPaths.addAll(this.multiFunQueryExecute.keySet());
-
 	}
 
 	public SelectPart addFunQueryExecute(QueryExecute<? extends Object> queryExecute) {
 		querySize++;
-		GenericsUtils.addListIfNotExists(this.multiFunQueryExecute, queryExecute.getQueryPathWithFieldName(),
+		GenericsUtils.addListIfNotExistsAndRet(this.multiFunQueryExecute, queryExecute.getQueryPathWithFieldName(),
 				queryExecute);
+		allQueryExecute.add(queryExecute);
 		return this;
 	}
 
@@ -67,9 +69,14 @@ public class SelectPart {
 		querySize++;
 		log.debug("queryExecute is:{} and superPath:{} and fullPath:{}", queryExecute, queryExecute.getQuerySuperPath(),
 				queryExecute.getQueryPathWithFieldName());
-		GenericsUtils.addListIfNotExists(this.queryExecuteCache, queryExecute.getQueryPathWithFieldName(),
+		GenericsUtils.addListIfNotExistsAndRet(this.queryExecuteCache, queryExecute.getQueryPathWithFieldName(),
 				queryExecute);
+		allQueryExecute.add(queryExecute);
 		return this;
+	}
+
+	public List<QueryExecute<? extends Object>> getAllQueryExecute() {
+		return this.allQueryExecute;
 	}
 
 	/**

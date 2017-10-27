@@ -1,4 +1,4 @@
-package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert;
+package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.valueConvert;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

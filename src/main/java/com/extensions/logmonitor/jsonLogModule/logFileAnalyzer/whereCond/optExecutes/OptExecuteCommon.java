@@ -3,8 +3,8 @@ package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.optExe
 import java.util.List;
 
 import com.extensions.logmonitor.exceptions.WrongMatchTypeException;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.valueConvert.ValueConvert;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.OptExecute;
-import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert.ValueConvert;
 import com.extensions.logmonitor.util.GenericsUtils;
 import com.extensions.logmonitor.util.LoadCache;
 import com.extensions.logmonitor.util.LoadCache.InitValue;

@@ -1,6 +1,9 @@
 grammar json ;
 
-json	
+jsonFile
+	: json+ #jsonFileRoot;
+
+json
 	: object	#objectPart
 	| array		#arrayPart ;
 

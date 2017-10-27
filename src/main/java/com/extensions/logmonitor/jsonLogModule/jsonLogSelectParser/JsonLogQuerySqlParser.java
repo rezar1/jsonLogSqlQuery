@@ -20,7 +20,6 @@ import org.apache.commons.lang.time.StopWatch;
 
 import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonLexer;
 import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser;
-import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonParserExecute.JsonContentAnalyzer;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.JsonLogSqlAnalyzer;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlLexer;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser;
@@ -66,24 +65,28 @@ public class JsonLogQuerySqlParser {
 	 * @param jsonLogString
 	 */
 	public static void doJsonLogStrAnalyzer(List<QueryExecutor> queryExecutores, byte[] bytes) {
-		try {
-			// 词语、语法解析，生成抽象语法树
-			// ANTLRInputStream input = new ANTLRFileStream(
-			// "/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles/test.log",
-			// "utf-8");
-			ANTLRInputStream input = new ANTLRInputStream(new ByteArrayInputStream(bytes));
-			com.extensions.logmonitor.jsonContentParseies.copy.jsonLexer lexer = new com.extensions.logmonitor.jsonContentParseies.copy.jsonLexer(
-					input);
-			CommonTokenStream tokens = new CommonTokenStream(lexer);
-			com.extensions.logmonitor.jsonContentParseies.copy.jsonParser parser = new com.extensions.logmonitor.jsonContentParseies.copy.jsonParser(
-					tokens);
-			ParseTree tree = parser.jsonFile();
-			ParseTreeWalker walker = new ParseTreeWalker();
-			JsonContentAnalyzer jsonLogSqlAnalyzer = new JsonContentAnalyzer(queryExecutores);
-			walker.walk(jsonLogSqlAnalyzer, tree);
-		} catch (IOException e) {
-			log.info("error while parser jsonLogString:{} ", e);
-		}
+		// try {
+		// 词语、语法解析，生成抽象语法树
+		// ANTLRInputStream input = new ANTLRFileStream(
+		// "/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles/test.log",
+		// "utf-8");
+		// ANTLRInputStream input = new ANTLRInputStream(new
+		// ByteArrayInputStream(bytes));
+		// com.extensions.logmonitor.jsonContentParseies.copy.jsonLexer lexer =
+		// new com.extensions.logmonitor.jsonContentParseies.copy.jsonLexer(
+		// input);
+		// CommonTokenStream tokens = new CommonTokenStream(lexer);
+		// com.extensions.logmonitor.jsonContentParseies.copy.jsonParser parser
+		// = new com.extensions.logmonitor.jsonContentParseies.copy.jsonParser(
+		// tokens);
+		// ParseTree tree = parser.jsonFile();
+		// ParseTreeWalker walker = new ParseTreeWalker();
+		// JsonContentAnalyzer jsonLogSqlAnalyzer = new
+		// JsonContentAnalyzer(queryExecutores);
+		// walker.walk(jsonLogSqlAnalyzer, tree);
+		// } catch (IOException e) {
+		// log.info("error while parser jsonLogString:{} ", e);
+		// }
 	}
 
 	/**

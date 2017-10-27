@@ -305,7 +305,7 @@ public class WordTrie {
 		charIndex.put(Character.valueOf('_'), 56);
 	}
 
-	private int locatIndex(char c) {
+	public int locatIndex(char c) {
 		int index = -1;
 		if (c >= 'A' && c <= 'Z') {
 			index = c - 'A';

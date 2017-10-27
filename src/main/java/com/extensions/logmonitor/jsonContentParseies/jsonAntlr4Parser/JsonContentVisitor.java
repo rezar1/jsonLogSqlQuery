@@ -1,4 +1,4 @@
-package com.extensions.logmonitor.jsonContentParseies.copy;
+package com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -6,20 +6,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.ArrayPartContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.ArrayValuesContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.EmptyArrayContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.EmptyObjContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.FalseValueContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.KeyValueContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.NullValueContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.NumberValueContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.ObjPairContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.ObjectPartContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.StringValueContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.SubArrayContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.SubObjectContext;
-import com.extensions.logmonitor.jsonContentParseies.copy.jsonParser.TrueValueContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.ArrayPartContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.ArrayValuesContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.EmptyArrayContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.EmptyObjContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.FalseValueContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.KeyValueContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.NullValueContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.NumberValueContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.ObjPairContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.ObjectPartContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.StringValueContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.SubArrayContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.SubObjectContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.TrueValueContext;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonParserExecute.QueryExecutorJsonWalker;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonScope.JsonSuperScope;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonScope.ObjPairKeyValueScope;
@@ -49,7 +49,10 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 	private Scope currentScope;
 
 	private List<QueryExecutorJsonWalker> queryExecutorWalker;
-	private Set<String> antrlParseFieldPaths = Sets.newHashSet();
+	private Set<String> antrlParseFieldPathsForAll = Sets.newHashSet();
+	private Set<String> antrlParseFieldPathsForWhere = Sets.newHashSet();
+	private Set<String> antrlParseFieldPathsForGroup = Sets.newHashSet();
+	private Set<String> antrlParseFieldPathsForOrder = Sets.newHashSet();
 
 	public JsonContentVisitor(List<QueryExecutor> queryExecutors) {
 		this.queryExecutorWalker = new ArrayList<>(queryExecutors.size());
@@ -58,7 +61,7 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 			QueryExecutorJsonWalker walker = new QueryExecutorJsonWalker(qe);
 			queryExecutorWalker.add(walker);
 		}
-		this.config();
+		this.config(false);
 	}
 
 	/**
@@ -66,25 +69,32 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 	 */
 	private void takeParseFieldPaths(QueryExecutor qe) {
 		SelectPart selectPart = qe.getSelectPart();
-		selectPart.fillParseFieldPaths(this.antrlParseFieldPaths);
+		selectPart.fillParseFieldPaths(this.antrlParseFieldPathsForAll);
 		WhereCondition whereCondition = qe.getWhereCondition();
 		if (whereCondition != null) {
-			whereCondition.fillParseFieldPaths(this.antrlParseFieldPaths);
+			whereCondition.fillParseFieldPaths(this.antrlParseFieldPathsForWhere);
 		}
 		OrderExecutor orderExecutor = qe.getOrderExecutor();
 		if (orderExecutor != null) {
-			orderExecutor.fillParseFieldPaths(this.antrlParseFieldPaths);
+			orderExecutor.fillParseFieldPaths(this.antrlParseFieldPathsForOrder);
 		}
 		GroupExecutor groupExecutor = qe.getGroupExecutor();
 		if (groupExecutor != null) {
-			groupExecutor.fillParseFieldPaths(this.antrlParseFieldPaths);
+			groupExecutor.fillParseFieldPaths(this.antrlParseFieldPathsForGroup);
 		}
+		this.antrlParseFieldPathsForAll.addAll(antrlParseFieldPathsForWhere);
+		this.antrlParseFieldPathsForAll.addAll(antrlParseFieldPathsForOrder);
+		this.antrlParseFieldPathsForAll.addAll(antrlParseFieldPathsForGroup);
 	}
 
 	public TwoTuple<Boolean, Boolean> checkNeedDoParse(String currentParsePath, boolean isSuper) {
+		return this.checkNeedDoParse(antrlParseFieldPathsForAll, currentParsePath, isSuper);
+	}
+
+	public TwoTuple<Boolean, Boolean> checkNeedDoParse(Set<String> paths, String currentParsePath, boolean isSuper) {
 		boolean currentNeedParse = false;
 		boolean needParseChild = false;
-		for (String needParsePath : this.antrlParseFieldPaths) {
+		for (String needParsePath : paths) {
 			if (needParsePath.startsWith(currentParsePath)) {
 				if (!currentNeedParse) {
 					boolean isPathMatch = needParsePath.equals(currentParsePath)
@@ -104,19 +114,22 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 			}
 		}
 		if (!needParseChild) {
-			if (currentParsePath.equals("*") && this.antrlParseFieldPaths.size() > 1) {
+			if (currentParsePath.equals("*") && paths.size() > 1) {
 				needParseChild = true;
 			}
 		}
 		return TupleUtil.tuple(currentNeedParse, needParseChild);
 	}
 
-	private void config() {
+	private void config(final boolean doQueryInvoke) {
 		this.jsonSuperScope = new JsonSuperScope();
 		currentScope = jsonSuperScope;
 		this.doInWalkers(new DoInWalker() {
 			@Override
 			public void walk(QueryExecutorJsonWalker walker) {
+				if (doQueryInvoke) {
+					walker.doQueryInvoke();
+				}
 				walker.config();
 			}
 		});
@@ -126,11 +139,12 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 	public Void visitObjectPart(final ObjectPartContext ctx) {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse("*", true);
 		if (checkNeedDoParse.first) {
-			System.out.println(this.currentScope.getScopeName() + ".*");
+			// System.out.println(this.currentScope.getScopeName() + ".*");
+			final String text = ctx.getText();
 			this.doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
-					walker.invokeJsonDataQuery("*", ctx.getText());
+					walker.invokeJsonDataQuery("*", text);
 				}
 			});
 		}
@@ -139,7 +153,7 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 			super.visitChildren(ctx);
 		}
 		currentScope = currentScope.getEnclosingScope();
-		this.config();
+		this.config(true);
 		return null;
 	}
 
@@ -165,7 +179,7 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 
 	@Override
 	public Void visitEmptyObj(EmptyObjContext ctx) {
-		System.out.println("visit empty obj");
+		// system.out.println("visit empty obj");
 		return null;
 	}
 
@@ -181,11 +195,13 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 	public Void visitSubObject(final SubObjectContext ctx) {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), true);
 		if (checkNeedDoParse.first) {
-			System.out.println(this.currentScope.getScopeName() + ".*:" + "" + ctx.getText());
+			final String text = ctx.getText();
+			// System.out.println(this.currentScope.getScopeName() + ".*:" + ""
+			// + text);
 			this.doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
-					walker.invokeJsonDataQuery(currentScope.getScopeName() + ".*", ctx.getText());
+					walker.invokeJsonDataQuery(currentScope.getScopeName() + ".*", text);
 				}
 			});
 		}
@@ -200,12 +216,14 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
 		if (checkNeedDoParse.first) {
 			final String stringValue = StrUtils.removeCommon(ctx.STRING().getText());
-			System.out.println(this.currentScope.getScopeName() + ":" + stringValue);
+			// System.out.println(this.currentScope.getScopeName() + ":" +
+			// stringValue);
 			doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
 					walker.invokeJsonDataQuery(currentScope.getScopeName(), stringValue);
 					walker.invokeJsonDataCondition(currentScope.getScopeName(), stringValue);
+					walker.invokeOrderBy(currentScope.getScopeName(), stringValue);
 				}
 			});
 		}
@@ -225,12 +243,14 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 			} else {
 				numValue.set(numberBig.intValue());
 			}
-			System.out.println(this.currentScope.getScopeName() + ":" + numValue.get());
+			// System.out.println(this.currentScope.getScopeName() + ":" +
+			// numValue.get());
 			doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
 					walker.invokeJsonDataQuery(currentScope.getScopeName(), numValue.get());
 					walker.invokeJsonDataCondition(currentScope.getScopeName(), numValue.get());
+					walker.invokeOrderBy(currentScope.getScopeName(), numValue.get());
 				}
 			});
 		}
@@ -247,12 +267,14 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 	public Void visitFalseValue(FalseValueContext ctx) {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
 		if (checkNeedDoParse.first) {
-			System.out.println(this.currentScope.getScopeName() + ":" + false);
+			// System.out.println(this.currentScope.getScopeName() + ":" +
+			// false);
 			doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
 					walker.invokeJsonDataQuery(currentScope.getScopeName(), false);
 					walker.invokeJsonDataCondition(currentScope.getScopeName(), false);
+					walker.invokeOrderBy(currentScope.getScopeName(), false);
 				}
 			});
 		}
@@ -263,12 +285,13 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 	public Void visitTrueValue(TrueValueContext ctx) {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
 		if (checkNeedDoParse.first) {
-			System.out.println(this.currentScope.getScopeName() + ":" + true);
+			// System.out.println(this.currentScope.getScopeName() + ":" +
+			// true);
 			doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
 					walker.invokeJsonDataQuery(currentScope.getScopeName(), true);
-					walker.invokeJsonDataCondition(currentScope.getScopeName(), true);
+					walker.invokeOrderBy(currentScope.getScopeName(), true);
 				}
 			});
 		}
@@ -279,12 +302,13 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 	public Void visitNullValue(NullValueContext ctx) {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
 		if (checkNeedDoParse.first) {
-			System.out.println(this.currentScope.getScopeName() + ": null");
+			// System.out.println(this.currentScope.getScopeName() + ": null");
 			doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
 					walker.invokeJsonDataQuery(currentScope.getScopeName(), null);
 					walker.invokeJsonDataCondition(currentScope.getScopeName(), null);
+					walker.invokeOrderBy(currentScope.getScopeName(), null);
 				}
 			});
 		}

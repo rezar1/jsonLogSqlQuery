@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,6 +23,7 @@ import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupFilter
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupIdContact;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderByDataItemWithObj;
 import com.extensions.logmonitor.util.BinaryFileStore;
+import com.extensions.logmonitor.util.BloomFilter;
 import com.google.common.collect.Lists;
 
 /**
@@ -35,10 +38,10 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 
 	private AtomicInteger totalCount = new AtomicInteger(0);
 	private SingleOrderByDataCache orderByDataCache;
-
 	private BinaryFileStore<QueryResultDataItem> fileStore;
-
 	private List<Long> orderByOffset = Lists.newArrayList();
+	private BloomFilter distinctFilter;
+	private boolean distinct;
 
 	public FileOutterQueryResultDataCache() {
 		SeriAndDeser<QueryResultDataItem> valueSeriAndDeser = new SeriAndDeser<QueryResultDataItem>() {
@@ -46,7 +49,9 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 			public void serialize(QueryResultDataItem obj, ByteBuffer buff) {
 				buff.putLong(obj.getRecordId());
 				buff.putInt(obj.getQueryResult().size());
-				for (Map.Entry<String, Object> entry : obj.getQueryResult().entrySet()) {
+				LinkedHashMap<String, Object> queryResult = obj.getQueryResult();
+				for(Iterator<Entry<String, Object>> it = queryResult.entrySet().iterator();it.hasNext();){  
+					Entry<String, Object> entry = (Entry<String, Object>)it.next();  
 					buff.putInt(entry.getKey().getBytes().length);
 					buff.put(entry.getKey().getBytes());
 					Object value = entry.getValue();
@@ -70,7 +75,7 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 					} else if (value instanceof SeriAndDeser) {
 						((SeriAndDeser) value).serialize(value, buff);
 					}
-				}
+		        }  
 				if (obj.getGroupId() != null) {
 					buff.putLong(obj.getGroupId());
 				} else {
@@ -130,11 +135,22 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 		fileStore.open();
 	}
 
-	public void cacheRecord(QueryResultDataItem cacheData) {
+	public boolean cacheRecord(QueryResultDataItem cacheData) {
+		String dataMarkStr = cacheData.parseValueStrMark();
+		if (this.distinct) {
+			boolean contains = distinctFilter.contains(dataMarkStr);
+			if (contains) {
+				// to dup check,存在误报,待优化 TODO
+				return false;
+			} else {
+				this.distinctFilter.add(dataMarkStr);
+			}
+		}
 		totalCount.incrementAndGet();
 		long currentPos = this.fileStore.currentPosition();
 		cacheData.setOffset(currentPos);
 		fileStore.set(cacheData);
+		return true;
 	}
 
 	public void triggerOver() {
@@ -182,6 +198,20 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * distinct 必须放在select_list开头
+	 */
+	@Override
+	public void setDistinct(boolean distinct) {
+		this.distinct = distinct;
+		System.out.println("set distinct:" + this.distinct);
+		if (this.distinct) {
+			this.distinctFilter = new BloomFilter();
+		} else {
+			this.distinctFilter = null;
+		}
 	}
 
 	public void setOrderByDataCache(SingleOrderByDataCache orderByDataCache) {

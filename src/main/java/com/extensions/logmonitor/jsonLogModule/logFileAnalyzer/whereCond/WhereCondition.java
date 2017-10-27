@@ -47,7 +47,11 @@ public class WhereCondition implements Clearable {
 	 * @param antrlParseFieldPaths
 	 */
 	public void fillParseFieldPaths(Set<String> antrlParseFieldPaths) {
-		antrlParseFieldPaths.addAll(this.optExecuteQuickVisitCache.keySet());
+		for (String key : this.optExecuteQuickVisitCache.keySet()) {
+			key = key.replaceAll(OptExecute.COLUMN_NAME_PREFIX, "");
+			key = key.replaceAll(OptExecute.FUN_CALL_PREFIX, "");
+			antrlParseFieldPaths.add(key);
+		}
 	}
 
 	public boolean checkWhereIsSuccess(Map<OptExecute, Boolean> executeResult) {

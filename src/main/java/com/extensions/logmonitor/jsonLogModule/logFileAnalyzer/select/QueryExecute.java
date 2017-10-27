@@ -1,6 +1,6 @@
 package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select;
 
-import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert.ValueConvert;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.valueConvert.ValueConvert;
 
 /**
  * 

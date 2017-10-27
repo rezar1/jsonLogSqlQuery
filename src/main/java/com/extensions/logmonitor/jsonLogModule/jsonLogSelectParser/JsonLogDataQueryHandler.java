@@ -10,6 +10,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.JsonContentVisitor;
 import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonLexer;
 import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonParserExecute.JsonContentAnalyzer;
@@ -32,18 +33,20 @@ public class JsonLogDataQueryHandler {
 	private ByteArrayOutputStream baos;
 	private List<QueryExecutor> queryExecutors;
 	private JsonContentAnalyzer jsonLogSqlAnalyzer;
+	private JsonContentVisitor visitor;
 
 	public JsonLogDataQueryHandler(List<QueryExecutor> queryExecutors) {
 		this.baos = new ByteArrayOutputStream();
 		this.queryExecutors = queryExecutors;
 		this.jsonLogSqlAnalyzer = new JsonContentAnalyzer(queryExecutors);
+		this.visitor = new JsonContentVisitor(queryExecutors);
 	}
 
 	public void wirteString(String lineLog) {
-		this.doHandle(lineLog);
+		this.doHandle2(lineLog);
 	}
 
-	private void doHandle(String lineLog) {
+	public void doHandle(String lineLog) {
 		try {
 			ByteArrayInputStream bais = new ByteArrayInputStream(lineLog.getBytes());
 			// 词语、语法解析，生成抽象语法树
@@ -54,6 +57,23 @@ public class JsonLogDataQueryHandler {
 			ParseTree tree = parser.jsonFile();
 			ParseTreeWalker walker = new ParseTreeWalker();
 			walker.walk(jsonLogSqlAnalyzer, tree);
+			bais.reset();
+			this.baos.reset();
+		} catch (IOException e) {
+			log.info("error while parser jsonLogString:{} ", e);
+		}
+	}
+
+	private void doHandle2(String lineLog) {
+		try {
+			ByteArrayInputStream bais = new ByteArrayInputStream(lineLog.trim().getBytes());
+			// 词语、语法解析，生成抽象语法树
+			ANTLRInputStream input = new ANTLRInputStream(bais);
+			jsonLexer lexer = new jsonLexer(input);
+			CommonTokenStream tokens = new CommonTokenStream(lexer);
+			jsonParser parser = new jsonParser(tokens);
+			ParseTree tree = parser.jsonFile();
+			visitor.visit(tree);
 			bais.reset();
 			this.baos.reset();
 		} catch (IOException e) {

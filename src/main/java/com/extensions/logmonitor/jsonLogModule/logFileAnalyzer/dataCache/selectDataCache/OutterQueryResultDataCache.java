@@ -38,6 +38,8 @@ public class OutterQueryResultDataCache implements QueryResultDataCache {
 
 	private SingleOrderByDataCache orderByDataCache;
 
+	private boolean distinct;
+
 	public static void main(String[] args) {
 		Random random = new Random();
 		StopWatch watch = new StopWatch();
@@ -147,9 +149,10 @@ public class OutterQueryResultDataCache implements QueryResultDataCache {
 	}
 
 	@Override
-	public void cacheRecord(QueryResultDataItem cacheData) {
+	public boolean cacheRecord(QueryResultDataItem cacheData) {
 		LongKey longKey = new LongKey((int) cacheData.getRecordId());
 		this.bplusTreeCache.insertOrUpdate(longKey, cacheData);
+		return true;
 	}
 
 	@Override
@@ -240,7 +243,13 @@ public class OutterQueryResultDataCache implements QueryResultDataCache {
 
 	@Override
 	public void setGroupHavingFilter(GroupFilter groupFilter) {
-		
+
+	}
+
+	@Override
+	public void setDistinct(boolean distinct) {
+		this.distinct = distinct;
+		System.out.println("set distinct:" + this.distinct);
 	}
 
 }

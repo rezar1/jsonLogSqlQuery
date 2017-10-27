@@ -1,4 +1,4 @@
-package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert;
+package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.valueConvert;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -25,16 +25,15 @@ public class HourConvert implements ValueConvert {
 		SimpleDateFormat format = new SimpleDateFormat(timeFormat);
 		if (value instanceof String) {
 			try {
-//				System.out.println("timeStr:'" + value.toString() + "'");
 				Date parse = format.parse(((String) value).trim());
 				Calendar calendar = Calendar.getInstance();
 				calendar.setTime(parse);
-				return calendar.get(Calendar.HOUR_OF_DAY) + "";
+				return calendar.get(Calendar.HOUR_OF_DAY);
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
 		}
-		return value.toString();
+		return value;
 	}
 
 	public void setTimeFormat(String timeFormat) {

@@ -1,5 +1,7 @@
 package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order;
 
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.valueConvert.ValueConvert;
+
 import lombok.Data;
 
 /**
@@ -15,9 +17,10 @@ public class OrderByItem {
 
 	private String orderByPath;
 	private OrderType orderType;
-	
-	public OrderByItem(){
-		
+	private ValueConvert valueConvert;
+
+	public OrderByItem() {
+
 	}
 
 }

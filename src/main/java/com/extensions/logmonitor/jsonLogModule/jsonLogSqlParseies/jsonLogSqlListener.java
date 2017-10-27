@@ -219,6 +219,22 @@ public interface jsonLogSqlListener extends ParseTreeListener {
 	void exitGroup_functions(jsonLogSqlParser.Group_functionsContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link jsonLogSqlParser#char_functions}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 */
+	void enterChar_functions(jsonLogSqlParser.Char_functionsContext ctx);
+
+	/**
+	 * Exit a parse tree produced by {@link jsonLogSqlParser#char_functions}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 */
+	void exitChar_functions(jsonLogSqlParser.Char_functionsContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link jsonLogSqlParser#table_name}.
 	 * 
 	 * @param ctx

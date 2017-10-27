@@ -32,12 +32,14 @@ public class InnterQueryResultDataCache implements QueryResultDataCache {
 	private SingleOrderByDataCache orderByDataCache;
 
 	private AtomicLong recordCount = new AtomicLong(0);
+	private boolean distinct;
 
 	@Override
-	public void cacheRecord(QueryResultDataItem cacheData) {
+	public boolean cacheRecord(QueryResultDataItem cacheData) {
 		// 暂时重复存储映射
 		queryResultItemCache.put(cacheData.getRecordId(), cacheData);
 		queryResultDataCache.add(cacheData);
+		return true;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -92,13 +94,16 @@ public class InnterQueryResultDataCache implements QueryResultDataCache {
 		return this.recordCount.getAndIncrement();
 	}
 
-	/* (non-Javadoc)
-	 * @see com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.QueryResultDataCache#setGroupHavingFilter(com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupFilter)
-	 */
 	@Override
 	public void setGroupHavingFilter(GroupFilter groupFilter) {
 		// TODO Auto-generated method stub
-		
+
+	}
+
+	@Override
+	public void setDistinct(boolean distinct) {
+		this.distinct = distinct;
+		System.out.println("set distinct:" + this.distinct);
 	}
 
 }

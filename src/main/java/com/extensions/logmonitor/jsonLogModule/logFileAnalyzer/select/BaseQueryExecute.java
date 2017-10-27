@@ -3,7 +3,7 @@ package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert.ValueConvert;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.valueConvert.ValueConvert;
 import com.extensions.logmonitor.util.GenericsUtils;
 
 import lombok.Data;

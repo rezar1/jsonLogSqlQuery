@@ -12,6 +12,7 @@ import com.extensions.logmonitor.exceptions.IllegalFunCall;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.AliasContext;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.Any_name_exclude_keywordContext;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.Boolean_literalContext;
+import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.Char_functionsContext;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.Column_specContext;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.CondBetweenOrNotContext;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.CondEqContext;
@@ -56,6 +57,8 @@ import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlPars
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.WhereOrContext;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.WhereXORContext;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.Where_clauseContext;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.FunctionCreator;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.valueConvert.ValueConvert;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupByItem;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderByItem;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderExecutor;
@@ -100,11 +103,9 @@ import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.optExec
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.optExecutes.NotEqOpt;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.optExecutes.NotInOpt;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.optExecutes.NotLikeOpt;
-import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert.DayOfYeahConvert;
-import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert.HourConvert;
-import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert.ValueConvert;
 import com.extensions.logmonitor.jsonLogModule.queryExecute.QueryExecutor;
 import com.extensions.logmonitor.util.GenericsUtils;
+import com.extensions.logmonitor.util.TwoTuple;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -138,42 +139,12 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 				GroupByItem gbi = null;
 				if (gic.column_spec() != null) {
 					gbi = new GroupByItem(gic.column_spec().getText());
-				} else if (gic.simple_expr() != null && gic.simple_expr().function_call() != null) {
-					Function_callContext function_call = gic.simple_expr().function_call();
-					List<Column_specContext> column_spec = function_call.column_spec();
-					FunctionListContext functionList = function_call.functionList();
-					Time_functionsContext timeF = functionList.time_functions();
-					if (timeF == null) {
-						continue;
-					}
-					ValueConvert valueConvert = null;
-					if (timeF.DAY() != null) {
-						valueConvert = new DayOfYeahConvert();
-						String groupByPath = "";
-						if (column_spec.size() == 2) {
-							Column_specContext format = column_spec.get(0);
-							((DayOfYeahConvert) valueConvert).setTimeFormat(trimString(format.getText()));
-							Column_specContext column_specContext = column_spec.get(1);
-							groupByPath = column_specContext.getText();
-						} else if (column_spec.size() == 1) {
-							Column_specContext column_specContext = column_spec.get(0);
-							groupByPath = column_specContext.getText();
-						}
-						gbi = new GroupByItem(groupByPath, valueConvert);
-					} else if (timeF.HOUR() != null) {
-						valueConvert = new HourConvert();
-						String groupByPath = "";
-						if (column_spec.size() == 2) {
-							Column_specContext format = column_spec.get(0);
-							((HourConvert) valueConvert).setTimeFormat(trimString(format.getText()));
-							Column_specContext column_specContext = column_spec.get(1);
-							groupByPath = column_specContext.getText();
-						} else if (column_spec.size() == 1) {
-							Column_specContext column_specContext = column_spec.get(0);
-							groupByPath = column_specContext.getText();
-						}
-						gbi = new GroupByItem(groupByPath, valueConvert);
-					}
+				} else if (gic.function_call() != null) {
+					Function_callContext function_call = gic.function_call();
+					TwoTuple<ValueConvert, List<String>> doHandleFunctionCall = doHandleFunctionCall(function_call);
+					ValueConvert valueConvert = doHandleFunctionCall.first;
+					List<String> second = doHandleFunctionCall.second;
+					gbi = new GroupByItem(second.get(0), valueConvert);
 				}
 				this.queryExecutor.getGroupExecutor().addOrderByItem(gbi);
 			}
@@ -182,6 +153,42 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 					.addGroupByCondition(((GroupScope) this.currentScope).getWhereCondition());
 		}
 		this.currentScope = this.currentScope.getEnclosingScope();
+	}
+
+	private TwoTuple<ValueConvert, List<String>> doHandleFunctionCall(Function_callContext function_call) {
+		List<Simple_exprContext> simple_exprContext = function_call.simple_expr();
+		List<Object> params = new ArrayList<>();
+		for (Simple_exprContext simpleExer : simple_exprContext) {
+			Object valueFromSimpleExpreFroFun = this.getValueFromSimpleExpreFroFun(simpleExer);
+			if (valueFromSimpleExpreFroFun != null) {
+				params.add(valueFromSimpleExpreFroFun);
+			}
+		}
+		FunctionListContext functionList = function_call.functionList();
+		Time_functionsContext timeF = functionList.time_functions();
+		Char_functionsContext char_functions = functionList.char_functions();
+		String functionName = "";
+		int type = FunctionCreator.FUN_TIME_TYPE;
+		if (timeF != null) {
+			if (timeF.DAY() != null) {
+				functionName = "DAY";
+			} else if (timeF.HOUR() != null) {
+				functionName = "HOUR";
+			} else if (timeF.MINUTE() != null) {
+				functionName = "MINUTE";
+			} else if (timeF.SECOND() != null) {
+				functionName = "SECOND";
+			} else if (timeF.YEAR() != null) {
+				functionName = "YEAH";
+			}
+		} else if (char_functions != null) {
+			// TODO
+			type = FunctionCreator.FUN_CHAR_TYPE;
+			if (char_functions.REGEX_GROUP() != null) {
+				functionName = "REGEX_GROUP";
+			}
+		}
+		return FunctionCreator.createValueConvert(type, functionName, params);
 	}
 
 	@Override
@@ -283,7 +290,11 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 	public void exitSelect_list(Select_listContext ctx) {
 		log.debug("exitSelect_list");
 		if (this.currentScope instanceof SelectScope) {
-			this.queryExecutor.setSelectPart(((SelectScope) this.currentScope).getSelectPart());
+			SelectPart selectPart = ((SelectScope) this.currentScope).getSelectPart();
+			if (ctx.DISTINCT() != null) {
+				selectPart.setDistinct(true);
+			}
+			this.queryExecutor.setSelectPart(selectPart);
 		}
 		this.currentScope = this.currentScope.getEnclosingScope();
 
@@ -387,7 +398,8 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 					log.warn("unsupport function call:{} ", ctx.getText());
 					return;
 				}
-				Simple_exprContext simple_expr = function_call.simple_expr();
+				List<Simple_exprContext> allSimpleExpreContext = function_call.simple_expr();
+				Simple_exprContext simple_expr = allSimpleExpreContext.get(0);
 				if (simple_expr != null) {
 					qe.setQueryPath(simple_expr.getText());
 				} else {
@@ -398,40 +410,9 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 				selectPart.addFunQueryExecute(qe);
 			} else if (functionList != null) {
 				qe = new ColumnValueQueryExecute();
-				List<Column_specContext> column_spec = function_call.column_spec();
-				Time_functionsContext timeF = functionList.time_functions();
-				String queryPath = null;
-				if (timeF != null) {
-					ValueConvert valueConvert = null;
-					if (timeF.DAY() != null) {
-						valueConvert = new DayOfYeahConvert();
-						if (column_spec.size() == 2) {
-							Column_specContext format = column_spec.get(0);
-							((DayOfYeahConvert) valueConvert).setTimeFormat(trimString(format.getText()));
-							Column_specContext column_specContext = column_spec.get(1);
-							queryPath = column_specContext.getText();
-						} else if (column_spec.size() == 1) {
-							Column_specContext column_specContext = column_spec.get(0);
-							queryPath = column_specContext.getText();
-						}
-					} else if (timeF.HOUR() != null) {
-						valueConvert = new HourConvert();
-						if (column_spec.size() == 2) {
-							Column_specContext format = column_spec.get(0);
-							((HourConvert) valueConvert).setTimeFormat(trimString(format.getText()));
-							Column_specContext column_specContext = column_spec.get(1);
-							queryPath = column_specContext.getText();
-						} else if (column_spec.size() == 1) {
-							Column_specContext column_specContext = column_spec.get(0);
-							queryPath = column_specContext.getText();
-						}
-					}
-					qe.setValueConvert(valueConvert);
-					if (queryPath == null) {
-						return;
-					}
-					qe.setQueryPath(queryPath);
-				}
+				TwoTuple<ValueConvert, List<String>> doHandleFunctionCall = this.doHandleFunctionCall(function_call);
+				qe.setValueConvert(doHandleFunctionCall.first);
+				qe.setQueryPath(doHandleFunctionCall.second.get(0));
 				qe.setAlias(getAlias(ctx.alias()));
 				log.info("QueryExecute is:{} {}", qe, qe.getQueryPathWithFieldName());
 				selectPart.addQueryExecute(qe);
@@ -606,7 +587,23 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 				Function_callContext fc = (Function_callContext) pt;
 				throw new IllegalFunCall("value can not be a function call : " + fc.getText());
 			} else if (pt instanceof Column_specContext) {
-				throw new IllegalFunCall("value can not be a function call : " + pt.getText());
+				throw new IllegalFunCall("value can not be a column_space : " + pt.getText());
+			} else if (pt instanceof Literal_valueContext) {
+				matchValue = getMatchValue((Literal_valueContext) pt);
+			}
+		}
+		return matchValue;
+	}
+
+	private Object getValueFromSimpleExpreFroFun(Simple_exprContext simple_expr) {
+		Object matchValue = null;
+		List<ParseTree> children = simple_expr.children;
+		for (ParseTree pt : children) {
+			if (pt instanceof Function_callContext) {
+				Function_callContext fc = (Function_callContext) pt;
+				throw new IllegalFunCall("value can not be a function call : " + fc.getText());
+			} else if (pt instanceof Column_specContext) {
+				matchValue = ((Column_specContext) pt).getText();
 			} else if (pt instanceof Literal_valueContext) {
 				matchValue = getMatchValue((Literal_valueContext) pt);
 			}
@@ -652,7 +649,7 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 				} else {
 					log.warn("unsupport function call:{} ", fc.getText());
 				}
-				Simple_exprContext simple_expr = fc.simple_expr();
+				Simple_exprContext simple_expr = fc.simple_expr().get(0);
 				if (simple_expr != null) {
 					qe.setQueryPath(simple_expr.getText());
 				} else {
@@ -664,39 +661,9 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 				return OptExecute.FUN_CALL_PREFIX + qe.getQueryPathWithFieldName();
 			}
 		} else {
-			FunctionListContext functionList = fc.functionList();
-			List<Column_specContext> column_spec = fc.column_spec();
-			Time_functionsContext timeF = functionList.time_functions();
-			ValueConvert valueConvert = null;
-			if (timeF.DAY() != null) {
-				valueConvert = new DayOfYeahConvert();
-				String retPath = null;
-				if (column_spec.size() == 2) {
-					Column_specContext format = column_spec.get(0);
-					((DayOfYeahConvert) valueConvert).setTimeFormat(trimString(format.getText()));
-					Column_specContext column_specContext = column_spec.get(1);
-					retPath = OptExecute.COLUMN_NAME_PREFIX + column_specContext.getText();
-				} else if (column_spec.size() == 1) {
-					Column_specContext column_specContext = column_spec.get(0);
-					retPath = OptExecute.COLUMN_NAME_PREFIX + column_specContext.getText();
-				}
-				optExecute.setValueConvert(valueConvert);
-				return retPath;
-			} else if (timeF.HOUR() != null) {
-				valueConvert = new HourConvert();
-				String retPath = null;
-				if (column_spec.size() == 2) {
-					Column_specContext format = column_spec.get(0);
-					((HourConvert) valueConvert).setTimeFormat(trimString(format.getText()));
-					Column_specContext column_specContext = column_spec.get(1);
-					retPath = OptExecute.COLUMN_NAME_PREFIX + column_specContext.getText();
-				} else if (column_spec.size() == 1) {
-					Column_specContext column_specContext = column_spec.get(0);
-					retPath = OptExecute.COLUMN_NAME_PREFIX + column_specContext.getText();
-				}
-				optExecute.setValueConvert(valueConvert);
-				return retPath;
-			}
+			TwoTuple<ValueConvert, List<String>> doHandleFunctionCall = this.doHandleFunctionCall(fc);
+			optExecute.setValueConvert(doHandleFunctionCall.first);
+			return doHandleFunctionCall.second.get(0);
 		}
 		return null;
 	}

@@ -8,19 +8,19 @@ package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select;
  * @Desc this guy is to lazy , noting left.
  *
  */
-public class ColumnValueQueryExecute extends BaseQueryExecute<String> {
+public class ColumnValueQueryExecute extends BaseQueryExecute<Object> {
 
-	private String value;
+	private Object value;
 
 	@Override
 	public void execute(Object value, Long groupId) {
 		if (value != null) {
-			this.value = super.convertValue(value).toString();
+			this.value = super.convertValue(value);
 		}
 	}
 
 	@Override
-	public String end(Long groupId) {
+	public Object end(Long groupId) {
 		return this.value;
 	}
 

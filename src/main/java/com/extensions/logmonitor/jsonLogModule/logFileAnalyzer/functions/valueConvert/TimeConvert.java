@@ -1,4 +1,4 @@
-package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.valueConvert;
+package com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.valueConvert;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -13,9 +13,10 @@ import java.util.Date;
  * @Desc this guy is to lazy , noting left.
  *
  */
-public class DayOfYeahConvert implements ValueConvert {
+public class TimeConvert implements ValueConvert {
 
 	private String timeFormat = "yyyy-MM-dd HH:mm:ss.SSSZ";
+	private int field;
 
 	@Override
 	public Object convert(Object value) {
@@ -25,16 +26,20 @@ public class DayOfYeahConvert implements ValueConvert {
 				Date parse = format.parse(value.toString());
 				Calendar calendar = Calendar.getInstance();
 				calendar.setTime(parse);
-				return calendar.get(Calendar.DAY_OF_YEAR) + "";
+				return calendar.get(field);
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
 		}
-		return value.toString();
+		return value;
 	}
 
 	public void setTimeFormat(String timeFormat) {
 		this.timeFormat = timeFormat;
+	}
+
+	public void setTakeField(int field) {
+		this.field = field;
 	}
 
 }

@@ -1,5 +1,5 @@
 // Generated from json.g4 by ANTLR 4.5
-package com.extensions.logmonitor.jsonContentParseies.copy;
+package com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser;
 
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 

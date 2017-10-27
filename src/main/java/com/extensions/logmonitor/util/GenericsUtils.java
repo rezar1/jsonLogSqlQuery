@@ -224,6 +224,22 @@ public class GenericsUtils {
 	 * @param key
 	 * @param listValue
 	 */
+	public static <K, V> boolean addListIfNotExistsAndRet(Map<K, List<V>> map, K key, V listValue) {
+		boolean hasList = true;
+		List<V> list = map.get(key);
+		if (isNullOrEmpty(list)) {
+			hasList = false;
+			list = new ArrayList<>();
+			map.put(key, list);
+		}
+		list.add(listValue);
+		return hasList;
+	}
+
+	/**
+	 * @param key
+	 * @param listValue
+	 */
 	public static <K, V> void addListIfNotExists(Map<K, List<V>> map, K key, V listValue) {
 		List<V> list = map.get(key);
 		if (isNullOrEmpty(list)) {

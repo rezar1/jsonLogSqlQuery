@@ -18,7 +18,7 @@ public interface QueryResultDataCache {
 
 	public long allocateRecordId();
 
-	public void cacheRecord(QueryResultDataItem cacheData);
+	public boolean cacheRecord(QueryResultDataItem cacheData);
 
 	public List<QueryResultDataItem> getCacheRecord(Integer startOffset, Integer batchSize);
 
@@ -31,6 +31,8 @@ public interface QueryResultDataCache {
 	 * @param havingFilter
 	 */
 	public void setGroupHavingFilter(Map<Long, Boolean> havingFilter);
+
+	public void setDistinct(boolean distinct);
 
 	public void setGroupHavingFilter(GroupFilter groupFilter);
 

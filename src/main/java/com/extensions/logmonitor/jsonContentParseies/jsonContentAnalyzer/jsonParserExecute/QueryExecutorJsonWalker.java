@@ -1,9 +1,13 @@
 package com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonParserExecute;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.ExecuteLazy;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.QueryResultDataItem;
@@ -11,6 +15,7 @@ import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupExecut
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderByDataItemWithObj;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderExecutor;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select.QueryExecute;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select.SelectPart;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.OptExecute;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.WhereCondition;
 import com.extensions.logmonitor.jsonLogModule.queryExecute.QueryExecutor;
@@ -30,7 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class QueryExecutorJsonWalker {
 
-	private List<ExecuteLazy> queryCache;
+	private Map<QueryExecute<? extends Object>, Integer> queryDataIndex;
+	private ExecuteLazy[] queryExecuteLazy;
 	private List<ExecuteLazy> groupQueryCache;
 	private Map<OptExecute, Boolean> executeWhereResult = new HashMap<>();
 	private QueryResultDataItem queryReusltDataItem;
@@ -43,22 +49,53 @@ public class QueryExecutorJsonWalker {
 	 */
 	public QueryExecutorJsonWalker(QueryExecutor qe) {
 		this.queryExecutor = qe;
+		SelectPart selectPart = this.queryExecutor.getSelectPart();
+		List<QueryExecute<? extends Object>> allQueryExecute = selectPart.getAllQueryExecute();
+		this.queryDataIndex = new HashMap<>();
+		Iterator<QueryExecute<? extends Object>> iterator = allQueryExecute.iterator();
+		int index = 0;
+		for (; iterator.hasNext();) {
+			QueryExecute<? extends Object> next = iterator.next();
+			this.queryDataIndex.put(next, index++);
+		}
 	}
 
 	public void config() {
 		this.queryReusltDataItem = this.queryExecutor.createQueryResultDataItem();
-		if (this.queryCache == null) {
-			this.queryCache = new ArrayList<>();
+		if (this.queryExecuteLazy == null) {
+			queryExecuteLazy = new ExecuteLazy[queryDataIndex.size()];
 			this.groupQueryCache = new ArrayList<>();
 		} else {
-			this.queryCache.clear();
+			Arrays.fill(this.queryExecuteLazy, null);
 			this.groupQueryCache.clear();
 		}
+		if (this.queryExecutor.getGroupExecutor() != null) {
+			isGroup = true;
+		}
 		if (this.queryExecutor.getOrderExecutor() != null) {
+			if (this.isGroup) {
+				checkoutOrderByIsLegal();
+			}
 			this.orderByDataItemWithObj = new OrderByDataItemWithObj();
 			orderByDataItemWithObj.initValueSize(this.queryExecutor.getOrderExecutor().getOrderBySize());
-		} else if (this.queryExecutor.getGroupExecutor() != null) {
-			isGroup = true;
+		}
+	}
+
+	/**
+	 * 
+	 */
+	private void checkoutOrderByIsLegal() {
+		OrderExecutor orderExecutor = this.queryExecutor.getOrderExecutor();
+		Set<String> paths = new HashSet<>();
+		orderExecutor.fillParseFieldPaths(paths);
+		GroupExecutor groupExecutor = this.queryExecutor.getGroupExecutor();
+		Set<String> pathOfGroup = new HashSet<>();
+		groupExecutor.fillParseFieldPaths(pathOfGroup);
+		for (String path : paths) {
+			if (!pathOfGroup.contains(path)) {
+				throw new IllegalArgumentException(
+						String.format("bad sql with wrong order by field:%s which not in group items", path));
+			}
 		}
 	}
 
@@ -70,8 +107,8 @@ public class QueryExecutorJsonWalker {
 			// 如果当前日志行记录检验OK
 			if (this.queryExecutor.getWhereCondition().checkWhereIsSuccess(this.executeWhereResult)) {
 				// 处理普通取值
-				for (ExecuteLazy executeLazy : this.queryCache) {
-					if (!executeLazy.isGroup()) {
+				for (ExecuteLazy executeLazy : this.queryExecuteLazy) {
+					if (executeLazy != null && !executeLazy.isGroup()) {
 						executeLazy.duQuery(this.queryReusltDataItem);
 					}
 				}
@@ -85,13 +122,17 @@ public class QueryExecutorJsonWalker {
 					isExistsInGroup = putQueryResultDataItem.first;
 					this.queryReusltDataItem.setGroupId(putQueryResultDataItem.second);
 				}
+				for (ExecuteLazy executeLazy : this.queryExecuteLazy) {
+					if (executeLazy != null && executeLazy.isGroup()) {
+						executeLazy.duQuery(this.queryReusltDataItem);
+					}
+				}
 				// 处理分组聚合函数
-				for (ExecuteLazy executeLazy : this.queryCache) {
+				for (ExecuteLazy executeLazy : this.groupQueryCache) {
 					if (executeLazy.isGroup()) {
 						executeLazy.duQuery(this.queryReusltDataItem);
 					}
 				}
-
 				if (this.isGroup) {
 					GroupExecutor groupExecutor = this.queryExecutor.getGroupExecutor();
 					groupExecutor.doWhereConditionQuery(this.queryReusltDataItem, this.groupQueryCache);
@@ -99,21 +140,23 @@ public class QueryExecutorJsonWalker {
 				}
 				// 根据分组情况判断当前查询结果是否添加到最终结果集合中
 				if (!isExistsInGroup) {
-					this.queryExecutor.cacheRecord(this.queryReusltDataItem);
+					boolean cacheRecord = this.queryExecutor.cacheRecord(this.queryReusltDataItem);
 					// 处理排序
-					if (this.queryExecutor.getOrderExecutor() != null && this.orderByDataItemWithObj != null) {
+					if (cacheRecord && this.queryExecutor.getOrderExecutor() != null
+							&& this.orderByDataItemWithObj != null) {
 						this.orderByDataItemWithObj.setRecordId(this.queryReusltDataItem.getRecordId());
 						OrderExecutor orderExecutor = this.queryExecutor.getOrderExecutor();
-						int index = 0;
 						Map<String, Object> queryResult = this.queryReusltDataItem.getQueryResult();
 						for (String path : orderExecutor.orderByPath()) {
-							this.orderByDataItemWithObj.addCacheData(index++, queryResult.get(path));
+							if (queryResult.containsKey(path)) {
+								int orderByField = orderExecutor.isOrderByField(path);
+								this.orderByDataItemWithObj.addCacheData(orderByField, queryResult.get(path));
+							}
 						}
 						this.queryExecutor.getOrderExecutor().addOrderByDataItem(orderByDataItemWithObj);
 					}
 				}
 			}
-			this.queryCache.clear();
 			this.groupQueryCache.clear();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -134,18 +177,17 @@ public class QueryExecutorJsonWalker {
 		}
 	}
 
-	// public void invokeOrderBy(String fieldName, Object value) {
-	// OrderExecutor orderExecutor = this.queryExecutor.getOrderExecutor();
-	// if (orderExecutor == null) {
-	// return;
-	// }
-	// int orderByFieldIndex = orderExecutor.isOrderByField(fieldName);
-	// log.debug("orderByIndex:{} for fieldName:{} and value:{}",
-	// orderByFieldIndex, fieldName, value);
-	// if (orderByFieldIndex != -1) {
-	// this.orderByDataItemWithObj.addCacheData(orderByFieldIndex, value);
-	// }
-	// }
+	public void invokeOrderBy(String fieldName, Object value) {
+		OrderExecutor orderExecutor = this.queryExecutor.getOrderExecutor();
+		if (orderExecutor == null) {
+			return;
+		}
+		int orderByFieldIndex = orderExecutor.isOrderByField(fieldName);
+		log.debug("orderByIndex:{} for fieldName:{} and value:{}", orderByFieldIndex, fieldName, value);
+		if (orderByFieldIndex != -1) {
+			this.orderByDataItemWithObj.addCacheData(orderByFieldIndex, value);
+		}
+	}
 
 	public void invokeJsonDataQuery(String superPath, Object value) {
 		this.invokeJsonDataQuery(superPath, value, false);
@@ -158,7 +200,10 @@ public class QueryExecutorJsonWalker {
 			if (GenericsUtils.notNullAndEmpty(queryExecuteWithSuperPath)) {
 				for (QueryExecute<? extends Object> queryExecute : queryExecuteWithSuperPath) {
 					log.debug("superPath:{} and queryExecute:{} value:{} ", superPath, queryExecute, value);
-					queryCache.add(ExecuteLazy.newInstance(queryExecute, value));
+					this.queryExecuteLazy[this.queryDataIndex.get(queryExecute)] = ExecuteLazy.newInstance(queryExecute,
+							value);
+					// queryCache.add(this.queryDataIndex.get(superPath),
+					// ExecuteLazy.newInstance(queryExecute, value));
 				}
 			}
 		}
@@ -168,7 +213,10 @@ public class QueryExecutorJsonWalker {
 			log.debug("superPath:{} and allQueryExecutes:{} value:{}", superPath, allQueryExecutes, value);
 			if (GenericsUtils.notNullAndEmpty(allQueryExecutes)) {
 				for (QueryExecute<? extends Object> queryExecute : allQueryExecutes) {
-					queryCache.add(ExecuteLazy.newInstance(queryExecute, value, true));
+					this.queryExecuteLazy[this.queryDataIndex.get(queryExecute)] = ExecuteLazy.newInstance(queryExecute,
+							value, true);
+					// queryCache.add(this.queryDataIndex.get(superPath),
+					// ExecuteLazy.newInstance(queryExecute, value, true));
 				}
 			}
 			this.invokeGroupByHavingDataQuery(superPath, value);

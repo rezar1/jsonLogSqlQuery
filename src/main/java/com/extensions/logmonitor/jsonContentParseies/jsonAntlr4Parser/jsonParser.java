@@ -109,6 +109,11 @@ public class jsonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitJsonFileRoot(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitJsonFileRoot(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final JsonFileContext jsonFile() throws RecognitionException {
@@ -170,6 +175,11 @@ public class jsonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitArrayPart(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitArrayPart(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class ObjectPartContext extends JsonContext {
 		public ObjectContext object() {
@@ -183,6 +193,11 @@ public class jsonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitObjectPart(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitObjectPart(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -250,6 +265,11 @@ public class jsonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitObjPair(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitObjPair(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class EmptyObjContext extends ObjectContext {
 		public EmptyObjContext(ObjectContext ctx) { copyFrom(ctx); }
@@ -260,6 +280,11 @@ public class jsonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitEmptyObj(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitEmptyObj(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -342,6 +367,11 @@ public class jsonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitEmptyArray(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitEmptyArray(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class ArrayValuesContext extends ArrayContext {
 		public List<ValueContext> value() {
@@ -358,6 +388,11 @@ public class jsonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitArrayValues(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitArrayValues(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -444,6 +479,11 @@ public class jsonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitKeyValue(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitKeyValue(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final PairContext pair() throws RecognitionException {
@@ -496,6 +536,11 @@ public class jsonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitSubObject(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitSubObject(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class FalseValueContext extends ValueContext {
 		public FalseValueContext(ValueContext ctx) { copyFrom(ctx); }
@@ -506,6 +551,11 @@ public class jsonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitFalseValue(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitFalseValue(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class StringValueContext extends ValueContext {
@@ -519,6 +569,11 @@ public class jsonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitStringValue(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitStringValue(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class TrueValueContext extends ValueContext {
 		public TrueValueContext(ValueContext ctx) { copyFrom(ctx); }
@@ -529,6 +584,11 @@ public class jsonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitTrueValue(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitTrueValue(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class NumberValueContext extends ValueContext {
@@ -541,6 +601,11 @@ public class jsonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitNumberValue(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitNumberValue(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 	public static class SubArrayContext extends ValueContext {
@@ -556,6 +621,11 @@ public class jsonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitSubArray(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitSubArray(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 	public static class NullValueContext extends ValueContext {
 		public NullValueContext(ValueContext ctx) { copyFrom(ctx); }
@@ -566,6 +636,11 @@ public class jsonParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof jsonListener ) ((jsonListener)listener).exitNullValue(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof jsonVisitor ) return ((jsonVisitor<? extends T>)visitor).visitNullValue(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 

@@ -24,7 +24,7 @@ public class QueryResultDataItem implements DataSizeCountable {
 
 	private long recordId;
 	private long offset;
-	private Map<String, Object> queryResult;
+	private LinkedHashMap<String, Object> queryResult;
 	private Long groupId;
 
 	public QueryResultDataItem(long recordId, int querySize) {
@@ -87,7 +87,7 @@ public class QueryResultDataItem implements DataSizeCountable {
 		return this;
 	}
 
-	public Map<String, Object> getQueryResult() {
+	public LinkedHashMap<String, Object> getQueryResult() {
 		return this.queryResult;
 	}
 
@@ -100,9 +100,52 @@ public class QueryResultDataItem implements DataSizeCountable {
 	}
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((groupId == null) ? 0 : groupId.hashCode());
+		result = prime * result + ((queryResult == null) ? 0 : queryResult.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		QueryResultDataItem other = (QueryResultDataItem) obj;
+		if (groupId == null) {
+			if (other.groupId != null)
+				return false;
+		} else if (!groupId.equals(other.groupId))
+			return false;
+		if (queryResult == null) {
+			if (other.queryResult != null)
+				return false;
+		} else if (!queryResult.equals(other.queryResult))
+			return false;
+		return true;
+	}
+
+	@Override
 	public String toString() {
 		return "QueryResultDataItem [recordId=" + recordId + ", offset=" + offset + ", queryResult=" + queryResult
 				+ ", groupId=" + groupId + "]";
+	}
+
+	/**
+	 * @return
+	 */
+	public String parseValueStrMark() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(this.groupId == null ? "null" : this.groupId);
+		for (Object entryValue : this.queryResult.values()) {
+			sb.append(entryValue.toString());
+		}
+		return sb.toString();
 	}
 
 }

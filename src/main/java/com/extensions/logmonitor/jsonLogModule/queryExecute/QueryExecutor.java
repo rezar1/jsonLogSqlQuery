@@ -32,12 +32,23 @@ public class QueryExecutor {
 	private OrderExecutor orderExecutor;
 	private Long[] limitInfos;
 	private QueryResultDataCache dataCache = new FileOutterQueryResultDataCache();
-
 	private int querySize;
 
 	public QueryResultDataItem createQueryResultDataItem() {
 		QueryResultDataItem setFileName = new QueryResultDataItem(querySize);
 		return setFileName;
+	}
+
+	public void setSelectPart(SelectPart selectPart) {
+		this.selectPart = selectPart;
+		this.dataCache.setDistinct(selectPart.isDistinct());
+	}
+
+	/**
+	 * @param queryReusltDataItem
+	 */
+	public boolean cacheRecord(QueryResultDataItem queryReusltDataItem) {
+		return this.dataCache.cacheRecord(queryReusltDataItem);
 	}
 
 	public List<QueryResultDataItem> doHandle() {
@@ -83,15 +94,6 @@ public class QueryExecutor {
 	 */
 	public void initGroupByExecutor() {
 		this.groupExecutor = new GroupExecutor();
-	}
-
-	/**
-	 * @param queryReusltDataItem
-	 */
-	public void cacheRecord(QueryResultDataItem queryReusltDataItem) {
-		synchronized (this) {
-			this.dataCache.cacheRecord(queryReusltDataItem);
-		}
 	}
 
 }
