@@ -11,6 +11,7 @@ import java.util.Set;
 
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.ExecuteLazy;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.QueryResultDataItem;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.valueConvert.ValueConvert;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.group.GroupExecutor;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderByDataItemWithObj;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderExecutor;
@@ -150,7 +151,10 @@ public class QueryExecutorJsonWalker {
 						for (String path : orderExecutor.orderByPath()) {
 							if (queryResult.containsKey(path)) {
 								int orderByField = orderExecutor.isOrderByField(path);
-								this.orderByDataItemWithObj.addCacheData(orderByField, queryResult.get(path));
+								ValueConvert valueConvert = orderExecutor.getValueConvert(orderByField);
+								Object objectValue = queryResult.get(path);
+								objectValue = (valueConvert == null) ? objectValue : valueConvert.convert(objectValue);
+								this.orderByDataItemWithObj.addCacheData(orderByField, objectValue);
 							}
 						}
 						this.queryExecutor.getOrderExecutor().addOrderByDataItem(orderByDataItemWithObj);
@@ -185,6 +189,8 @@ public class QueryExecutorJsonWalker {
 		int orderByFieldIndex = orderExecutor.isOrderByField(fieldName);
 		log.debug("orderByIndex:{} for fieldName:{} and value:{}", orderByFieldIndex, fieldName, value);
 		if (orderByFieldIndex != -1) {
+			ValueConvert valueConvert = orderExecutor.getValueConvert(orderByFieldIndex);
+			value = (valueConvert == null) ? value : valueConvert.convert(value);
 			this.orderByDataItemWithObj.addCacheData(orderByFieldIndex, value);
 		}
 	}

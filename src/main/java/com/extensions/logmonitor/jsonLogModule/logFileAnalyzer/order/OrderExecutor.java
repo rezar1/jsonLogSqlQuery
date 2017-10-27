@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.orderByDataCache.OutterFileOrderByDataCache;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.orderByDataCache.SingleOrderByDataCache;
+import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.functions.valueConvert.ValueConvert;
 import com.extensions.logmonitor.jsonLogModule.queryExecute.Clearable;
 
 /**
@@ -22,8 +23,8 @@ import com.extensions.logmonitor.jsonLogModule.queryExecute.Clearable;
 public class OrderExecutor implements Clearable {
 
 	// 系统配置
-	private Map<String, OrderByItem> orderByItemMaps = new LinkedHashMap<>();
 	private Map<String, Integer> orderByItemIndexMaps = new LinkedHashMap<>();
+	private List<ValueConvert> valueConvert = new ArrayList<>();
 	private List<String> orderByPaths = new ArrayList<>();
 	private List<OrderType> orderTypes = new ArrayList<>();
 	private int itemIndex = 0;
@@ -48,10 +49,10 @@ public class OrderExecutor implements Clearable {
 	}
 
 	public OrderExecutor addOrderByItem(OrderByItem orderByItem) {
-		orderByItemMaps.put(orderByItem.getOrderByPath(), orderByItem);
 		orderTypes.add(orderByItem.getOrderType());
-		orderByItemIndexMaps.put(orderByItem.getOrderByPath(), itemIndex++);
 		orderByPaths.add(orderByItem.getOrderByPath());
+		valueConvert.add(orderByItem.getValueConvert());
+		orderByItemIndexMaps.put(orderByItem.getOrderByPath(), itemIndex++);
 		return this;
 	}
 
@@ -61,6 +62,10 @@ public class OrderExecutor implements Clearable {
 			this.orderDataCache.setOrderTypes(orderTypes);
 		}
 		return this.orderDataCache;
+	}
+
+	public ValueConvert getValueConvert(int fieldIndex) {
+		return this.valueConvert.get(fieldIndex);
 	}
 
 	public int isOrderByField(String fieldPathName) {
@@ -79,7 +84,7 @@ public class OrderExecutor implements Clearable {
 	 * @return
 	 */
 	public int getOrderBySize() {
-		return this.orderByItemMaps.size();
+		return this.orderByPaths.size();
 	}
 
 	/**

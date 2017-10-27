@@ -13,13 +13,12 @@ import java.util.regex.Pattern;
  */
 public class StringRegexConvert implements ValueConvert {
 
-	private String regexStr;
+	private Pattern pattern;
 	private int group;
 
 	@Override
 	public Object convert(Object value) {
 		String ret = value.toString();
-		Pattern pattern = Pattern.compile(regexStr);
 		Matcher matcher = pattern.matcher(ret);
 		boolean matches = matcher.matches();
 		if (matches) {
@@ -30,7 +29,7 @@ public class StringRegexConvert implements ValueConvert {
 	}
 
 	public void setRegexStr(String regexStr) {
-		this.regexStr = regexStr;
+		pattern = Pattern.compile(regexStr);
 	}
 
 	public void setGroupId(int groupId) {

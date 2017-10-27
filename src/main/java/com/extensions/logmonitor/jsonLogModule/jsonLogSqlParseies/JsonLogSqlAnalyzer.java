@@ -227,7 +227,16 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 		List<Orderby_itemContext> orderby_item = ctx.orderby_item();
 		for (Orderby_itemContext orderByItemC : orderby_item) {
 			Groupby_itemContext groupby_item = orderByItemC.groupby_item();
-			String orderByPath = groupby_item.getText();
+			Function_callContext function_call = groupby_item.function_call();
+			String orderByPath = "";
+			ValueConvert valueConvert = null;
+			if (function_call != null) {
+				TwoTuple<ValueConvert, List<String>> doHandleFunctionCall = this.doHandleFunctionCall(function_call);
+				valueConvert = doHandleFunctionCall.first;
+				orderByPath = doHandleFunctionCall.second.get(0);
+			} else {
+				orderByPath = groupby_item.getText();
+			}
 			TerminalNode desc = orderByItemC.DESC();
 			OrderType orderType = OrderType.ASC;
 			if (desc != null) {
@@ -236,6 +245,7 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 			OrderByItem orderByItem = new OrderByItem();
 			orderByItem.setOrderByPath(orderByPath);
 			orderByItem.setOrderType(orderType);
+			orderByItem.setValueConvert(valueConvert);
 			log.debug("orderByStr:{}", orderByPath);
 			this.queryExecutor.getOrderExecutor().addOrderByItem(orderByItem);
 		}

@@ -22,7 +22,7 @@ import com.extensions.logmonitor.util.TwoTuple;
 public class FunctionCreator {
 
 	public static final int FUN_TIME_TYPE = 0; // time
-	public static final int FUN_CHAR_TYPE = 0; // time
+	public static final int FUN_CHAR_TYPE = 1; // char
 
 	public static TwoTuple<ValueConvert, List<String>> createValueConvert(int type, String functionName,
 			List<Object> params) {

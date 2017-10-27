@@ -640,7 +640,8 @@ orderby_item
 	: groupby_item (ASC | DESC)? ;
 
 limit_clause
-	: LIMIT ((offset COMMA)? row_count)	#limit ;
+	: LIMIT ((offset COMMA)? row_count)	#limit
+	;
 
 offset
 	: INTEGER_NUM ;
