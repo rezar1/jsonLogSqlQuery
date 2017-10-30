@@ -132,7 +132,7 @@ public class LogDataCreator {
 			file.createNewFile();
 		}
 		PrintWriter pw = new PrintWriter(new FileWriter(file), true);
-		for (int i = 0; i < 10000000; i++) {
+		for (int i = 0; i < 1000000; i++) {
 			Object outputObj = createLogObj();
 			pw.write(JacksonUtil.obj2Str(outputObj) + "\n");
 			pw.flush();
