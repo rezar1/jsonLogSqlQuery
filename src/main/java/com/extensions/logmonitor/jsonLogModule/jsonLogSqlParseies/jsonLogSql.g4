@@ -589,16 +589,19 @@ predicate
 simple_expr
 	: literal_value
 	| column_spec
+	| array_column_spec
 	| function_call
 	| expression_list ;
 
 function_call
 	: (  functionList ( LPAREN (simple_expr (COMMA simple_expr)*)? RPAREN ) ?  )
-	| (  group_functions LPAREN ( ASTERISK | ALL | DISTINCT )? (simple_expr|'*') RPAREN  )
-	;
+	| (  group_functions LPAREN ( ASTERISK | ALL | DISTINCT )? (simple_expr|'*') RPAREN  ) ;
 
 column_spec
 	: (table_name DOT )* (column_name) ;
+
+array_column_spec
+	:  (column_name (('[' (INTEGER_NUM|'#'|'*') ']')|DOT)*)+ ;
 
 expression_list
 	: LPAREN expression ( COMMA expression )* RPAREN ;
@@ -640,8 +643,7 @@ orderby_item
 	: groupby_item (ASC | DESC)? ;
 
 limit_clause
-	: LIMIT ((offset COMMA)? row_count)	#limit
-	;
+	: LIMIT ((offset COMMA)? row_count)	#limit ;
 
 offset
 	: INTEGER_NUM ;
@@ -657,8 +659,8 @@ select_list
 
 displayed_column
 	: ASTERISK							#selectAll
-	| column_spec DOT ASTERISK			#selectTableDotAll
-	| ( column_spec (alias)? )			#selectTableColumn
+	| array_column_spec DOT ASTERISK			#selectTableDotAll
+	| ( array_column_spec (alias)? )			#selectTableColumn
 	| ( function_call (alias)? ) 		#selectFun ;
 
 length

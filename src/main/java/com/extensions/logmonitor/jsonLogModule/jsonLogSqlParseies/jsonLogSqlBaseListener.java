@@ -833,6 +833,28 @@ public class jsonLogSqlBaseListener implements jsonLogSqlListener {
 	 * </p>
 	 */
 	@Override
+	public void enterArray_column_spec(jsonLogSqlParser.Array_column_specContext ctx) {
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation does nothing.
+	 * </p>
+	 */
+	@Override
+	public void exitArray_column_spec(jsonLogSqlParser.Array_column_specContext ctx) {
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation does nothing.
+	 * </p>
+	 */
+	@Override
 	public void enterExpression_list(jsonLogSqlParser.Expression_listContext ctx) {
 	}
 

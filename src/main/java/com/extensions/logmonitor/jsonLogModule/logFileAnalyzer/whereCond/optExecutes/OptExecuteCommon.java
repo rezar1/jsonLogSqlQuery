@@ -65,18 +65,32 @@ public abstract class OptExecuteCommon<M> implements OptExecute {
 	protected abstract String getOptType();
 
 	@Override
+	public boolean isArrayAllCheck() {
+		return false;
+	}
+
+	@Override
+	public void setArrayAllCheck(boolean isArrayAllCheck) {
+		// TODO
+	}
+
+	@Override
 	public boolean OptSuccess(Object value) {
 		log.debug("{} and matchValue is:{} ", this.toString(), value);
+		boolean result = false;
 		if (this.matchValue == null) {
-			return compareAsNull(value);
+			result = compareAsNull(value);
+		} else {
+			if (this.valueConvert != null) {
+				value = this.valueConvert.convert(value);
+			}
+			if (this.isArray) {
+				result = compareAsArray(value);
+			} else {
+				result = singleValueMatch(this.matchValue, value);
+			}
 		}
-		if (this.valueConvert != null) {
-			value = this.valueConvert.convert(value);
-		}
-		if (this.isArray) {
-			return compareAsArray(value);
-		}
-		return singleValueMatch(this.matchValue, value);
+		return result;
 	}
 
 	/**

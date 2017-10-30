@@ -139,7 +139,6 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 	public Void visitObjectPart(final ObjectPartContext ctx) {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse("*", true);
 		if (checkNeedDoParse.first) {
-			// System.out.println(this.currentScope.getScopeName() + ".*");
 			final String text = ctx.getText();
 			this.doInWalkers(new DoInWalker() {
 				@Override

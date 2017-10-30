@@ -36,6 +36,22 @@ public class LogMonitorTaskTest {
 	}
 
 	@Test
+	public void testJsonArrayAnalyzer() throws Exception {
+		String logDirectory = "/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles";
+		String logName = "test.log";
+		FilePointer filePointer = new FilePointer();
+		filePointer.setFilename(logDirectory + logName);
+		when(mockFilePointerProcessor.getFilePointer(anyString(), anyString())).thenReturn(filePointer);
+		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("TestLog",
+				"/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles", "test.log");
+		SearchInfo searchInfo = new SearchInfo("select * from testJson where subUserInfos[*].adslotId in (81804026,63016870,67589938)");
+		logJsonAnalyzer.addSearchInfo(searchInfo);
+		LogMonitorTaskForJsonAnalyzer analyzer = new LogMonitorTaskForJsonAnalyzer(mockFilePointerProcessor,
+				logJsonAnalyzer);
+		analyzer.call();
+	}
+
+	@Test
 	public void testJsonAnalyzer() throws Exception {
 		String logDirectory = "/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles";
 		String logName = "test.log";

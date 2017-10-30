@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import com.extensions.logmonitor.exceptions.IllegalFunCall;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.AliasContext;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.Any_name_exclude_keywordContext;
+import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.Array_column_specContext;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.Boolean_literalContext;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.Char_functionsContext;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSqlParseies.jsonLogSqlParser.Column_specContext;
@@ -159,7 +160,7 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 		List<Simple_exprContext> simple_exprContext = function_call.simple_expr();
 		List<Object> params = new ArrayList<>();
 		for (Simple_exprContext simpleExer : simple_exprContext) {
-			Object valueFromSimpleExpreFroFun = this.getValueFromSimpleExpreFroFun(simpleExer);
+			Object valueFromSimpleExpreFroFun = this.getValueFromSimpleExpreForFun(simpleExer);
 			if (valueFromSimpleExpreFroFun != null) {
 				params.add(valueFromSimpleExpreFroFun);
 			}
@@ -584,9 +585,20 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 			} else if (pt instanceof Column_specContext) {
 				Column_specContext cpc = (Column_specContext) pt;
 				matchPath = handleColumnSpace(cpc).toString();
+			} else if (pt instanceof Array_column_specContext) {
+				Array_column_specContext acpc = (Array_column_specContext) pt;
+				matchPath = handleArrayColumnSpace(acpc).toString();
 			}
 		}
 		return matchPath;
+	}
+
+	/**
+	 * @param acpc
+	 * @return
+	 */
+	private Object handleArrayColumnSpace(Array_column_specContext acpc) {
+		return OptExecute.COLUMN_NAME_PREFIX + acpc.getText();
 	}
 
 	private Object getValueFromSimpleExpre(Simple_exprContext simple_expr) {
@@ -605,7 +617,7 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 		return matchValue;
 	}
 
-	private Object getValueFromSimpleExpreFroFun(Simple_exprContext simple_expr) {
+	private Object getValueFromSimpleExpreForFun(Simple_exprContext simple_expr) {
 		Object matchValue = null;
 		List<ParseTree> children = simple_expr.children;
 		for (ParseTree pt : children) {

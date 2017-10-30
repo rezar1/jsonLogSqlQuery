@@ -63,6 +63,7 @@ public class QueryExecutorJsonWalker {
 
 	public void config() {
 		this.queryReusltDataItem = this.queryExecutor.createQueryResultDataItem();
+		this.executeWhereResult.clear();
 		if (this.queryExecuteLazy == null) {
 			queryExecuteLazy = new ExecuteLazy[queryDataIndex.size()];
 			this.groupQueryCache = new ArrayList<>();
@@ -129,11 +130,11 @@ public class QueryExecutorJsonWalker {
 					}
 				}
 				// 处理分组聚合函数
-				for (ExecuteLazy executeLazy : this.groupQueryCache) {
-					if (executeLazy.isGroup()) {
-						executeLazy.duQuery(this.queryReusltDataItem);
-					}
-				}
+				// for (ExecuteLazy executeLazy : this.groupQueryCache) {
+				// if (executeLazy.isGroup()) {
+				// executeLazy.duQuery(this.queryReusltDataItem);
+				// }
+				// }
 				if (this.isGroup) {
 					GroupExecutor groupExecutor = this.queryExecutor.getGroupExecutor();
 					groupExecutor.doWhereConditionQuery(this.queryReusltDataItem, this.groupQueryCache);
@@ -169,13 +170,17 @@ public class QueryExecutorJsonWalker {
 
 	public void invokeJsonDataCondition(String superPath, Object value) {
 		WhereCondition whereCondition = this.queryExecutor.getWhereCondition();
-		Map<String, List<OptExecute>> optExecuteQuickVisitCache = whereCondition.getOptExecuteQuickVisitCache();
-		if (optExecuteQuickVisitCache.containsKey(OptExecute.COLUMN_NAME_PREFIX + superPath)) {
-			List<OptExecute> optExecutes = optExecuteQuickVisitCache.get(OptExecute.COLUMN_NAME_PREFIX + superPath);
+		List<OptExecute> optExecutes = whereCondition.findOptExecutes(superPath);
+		if (GenericsUtils.notNullAndEmpty(optExecutes)) {
 			for (OptExecute optExecute : optExecutes) {
 				boolean optSuccess = optExecute.OptSuccess(value);
 				log.debug("optExecuteType:{} optExecute :{} and value:{} and optSuccess:{}",
 						optExecute.getClass().getSimpleName(), optExecute, value, optSuccess);
+				Boolean preOptExecute = this.executeWhereResult.get(optExecute);
+				if (preOptExecute != null) {
+					optSuccess = optExecute.isArrayAllCheck() ? preOptExecute && optSuccess
+							: preOptExecute || optSuccess;
+				}
 				executeWhereResult.put(optExecute, optSuccess);
 			}
 		}

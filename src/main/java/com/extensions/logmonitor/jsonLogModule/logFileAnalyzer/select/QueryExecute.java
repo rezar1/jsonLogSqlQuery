@@ -14,9 +14,6 @@ public interface QueryExecute<T> {
 
 	public void execute(Object value, Long groupId);
 
-	// public void setQueryResultDataCache(QueryResultDataCache
-	// queryResultDtaCache);
-
 	public T end(Long groupId);
 
 	public void setAlias(String alias);

@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.ExecuteLazy;
+import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.NeedParsePathMatcher;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.selectDataCache.QueryResultDataItem;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.select.QueryExecute;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.whereCond.OptExecute;
@@ -58,10 +59,10 @@ public class GroupExecutor {
 			return;
 		}
 		Map<OptExecute, Boolean> optExecuteResult = new HashMap<>();
-		Map<String, List<OptExecute>> optExecuteQuickVisitCache = this.groupWhereCondition
-				.getOptExecuteQuickVisitCache();
-		for (String queryPath : optExecuteQuickVisitCache.keySet()) {
-			for (OptExecute optExecute : optExecuteQuickVisitCache.get(queryPath)) {
+		Map<NeedParsePathMatcher, List<OptExecute>> optExecuteQuickVisitCache = this.groupWhereCondition
+				.getOptExecuteQuickVisitCache2();
+		for (List<OptExecute> optExecutes : optExecuteQuickVisitCache.values()) {
+			for (OptExecute optExecute : optExecutes) {
 				Object value = this.havingOptExecuteToQueryMapper.get(optExecute).end(queryReusltDataItem.getGroupId());
 				boolean optSuccess = checkOptExecuteForGroupCondition(optExecute, value);
 				log.debug("optExecuteType:{} optExecute :{} and value:{} and optSuccess:{}",

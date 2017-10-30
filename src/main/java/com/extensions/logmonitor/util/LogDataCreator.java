@@ -6,7 +6,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.math.RandomUtils;
@@ -56,7 +59,18 @@ public class LogDataCreator {
 		UserInfo userInfo = new UserInfo();
 		userInfo.setAdslotId(random(10000l, 99999999l));
 		userInfo.setAppId(RandomStringUtils.random(23, chars));
+		userInfo.setComments(Arrays.asList("hehe", "hahaha", "xixixi"));
 		jlo.setUserInfo(userInfo);
+		UserInfo subUserInfo = null;
+		List<UserInfo> subUserInfos = new ArrayList<>();
+		for (int i = 0; i < (Math.random() * 10); i++) {
+			subUserInfo = new UserInfo();
+			subUserInfo.setAdslotId(random(10000l, 99999999l));
+			subUserInfo.setAppId(RandomStringUtils.random(23, chars));
+			subUserInfo.setComments(Arrays.asList("hehe" + i, "hahaha" + i + 1, "xixixi" + (i + 5)));
+			subUserInfos.add(subUserInfo);
+		}
+		jlo.setSubUserInfos(subUserInfos);
 		Address address = new Address();
 		address.setCity(citys[RandomUtils.nextInt(citys.length)]);
 		address.setProv(ps[RandomUtils.nextInt(ps.length)]);
@@ -65,6 +79,7 @@ public class LogDataCreator {
 		jlo.setAge(RandomUtils.nextInt(100));
 		jlo.setName("Rezar" + RandomUtils.nextInt(Integer.MAX_VALUE));
 		jlo.setTime(randomTimeStr());
+		jlo.setArrayInfos(Arrays.asList("abc", "def", "ghi"));
 		return jlo;
 	}
 

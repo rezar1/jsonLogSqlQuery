@@ -75,7 +75,7 @@ public class JsonContentAnalyzer extends jsonBaseListener {
 	}
 
 	public boolean checkNeedDoParse(String currentParsePath) {
-		
+
 		return false;
 	}
 
@@ -99,6 +99,16 @@ public class JsonContentAnalyzer extends jsonBaseListener {
 	public void exitJsonFileRoot(JsonFileRootContext ctx) {
 	}
 
+	private static interface DoInWalker {
+		public void walk(QueryExecutorJsonWalker walker);
+	}
+
+	public void doInWalkers(DoInWalker doInWalker) {
+		for (QueryExecutorJsonWalker walker : this.queryExecutorWalker) {
+			doInWalker.walk(walker);
+		}
+	}
+
 	@Override
 	public void enterObjectPart(final ObjectPartContext ctx) {
 		log.debug("{} and currentPath:{}", "enterObjectPart", currentScope.getScopeName());
@@ -111,16 +121,6 @@ public class JsonContentAnalyzer extends jsonBaseListener {
 			});
 		} else {
 			currentScope = new ObjectScope(currentScope, "");
-		}
-	}
-
-	private static interface DoInWalker {
-		public void walk(QueryExecutorJsonWalker walker);
-	}
-
-	public void doInWalkers(DoInWalker doInWalker) {
-		for (QueryExecutorJsonWalker walker : this.queryExecutorWalker) {
-			doInWalker.walk(walker);
 		}
 	}
 

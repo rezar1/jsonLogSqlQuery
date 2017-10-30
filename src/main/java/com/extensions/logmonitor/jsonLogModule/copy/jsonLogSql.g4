@@ -143,7 +143,59 @@ keyword
 	| GET
 	| SET_VAR
 	| SHIFT_LEFT
-	| SHIFT_RIGHT ;
+	| SHIFT_RIGHT
+	| LCASE
+	| LOWER
+	| TO_CHAR
+	| LTRIM
+	| RTRIM
+	| CONCAT
+	| SUBSTR
+	| TRIM
+	| UCASE
+	| UPPER
+	| LENGTH
+	| REVERSE
+	| REGEX_GROUP ;
+
+LCASE
+	: L_ C_ A_ S_ E_ ;
+
+LOWER
+	: L_ O_ W_ E_ R_ ;
+
+LTRIM
+	: L_ T_ R_ I_ M_ ;
+
+RTRIM
+	: R_ T_ R_ I_ M_ ;
+
+CONCAT
+	: C_ O_ N_ C_ A_ T_ ;
+
+SUBSTR
+	: S_ U_ B_ S_ T_ R_ ;
+
+TO_CHAR
+	: T_ O_ '_' C_ H_ A_ R_ ;
+
+TRIM
+	: T_ R_ I_ M_ ;
+
+UCASE
+	: U_ C_ A_ S_ E_ ;
+
+REGEX_GROUP
+	: R_ E_ G_ E_ X_ '_' G_ R_ O_ U_ P_ ;
+
+UPPER
+	: U_ P_ P_ E_ R_ ;
+
+LENGTH
+	: L_ E_ N_ G_ T_ H_ ;
+
+REVERSE
+	: R_ E_ V_ E_ R_ S_ E_ ;
 
 TRUE
 	: T_ R_ U_ E_ ;
@@ -460,7 +512,8 @@ literal_value
 	: ( string_literal | number_literal | hex_literal | boolean_literal | bit_literal | NULL ) ;
 
 functionList
-	: time_functions ;
+	: time_functions
+	| char_functions ;
 
 time_functions
 	: DAY
@@ -476,6 +529,21 @@ group_functions
 	| MAX
 	| MIN
 	| SUM ;
+
+char_functions
+	: LCASE
+	| LOWER
+	| LTRIM
+	| RTRIM
+	| CONCAT
+	| SUBSTR
+	| TRIM
+	| UCASE
+	| UPPER
+	| TO_CHAR
+	| LENGTH
+	| REVERSE
+	| REGEX_GROUP ;
 
 table_name
 	: any_name ;
@@ -521,15 +589,19 @@ predicate
 simple_expr
 	: literal_value
 	| column_spec
+	| array_column_spec
 	| function_call
 	| expression_list ;
 
 function_call
-	: (  functionList ( LPAREN (column_spec (COMMA column_spec)*)? RPAREN ) ?  )
+	: (  functionList ( LPAREN (simple_expr (COMMA simple_expr)*)? RPAREN ) ?  )
 	| (  group_functions LPAREN ( ASTERISK | ALL | DISTINCT )? (simple_expr|'*') RPAREN  ) ;
 
 column_spec
 	: (table_name DOT )* (column_name) ;
+
+array_column_spec
+	:  (column_name (('[' (INTEGER_NUM|'#'|'*') ']')|DOT)*)+ ;
 
 expression_list
 	: LPAREN expression ( COMMA expression )* RPAREN ;
@@ -559,7 +631,7 @@ groupby_clause
 groupby_item
 	: column_spec
 	| INTEGER_NUM
-	| simple_expr ;
+	| function_call ;
 
 having_clause
 	: HAVING expression ;
@@ -587,8 +659,8 @@ select_list
 
 displayed_column
 	: ASTERISK							#selectAll
-	| column_spec DOT ASTERISK			#selectTableDotAll
-	| ( column_spec (alias)? )			#selectTableColumn
+	| array_column_spec DOT ASTERISK			#selectTableDotAll
+	| ( array_column_spec (alias)? )			#selectTableColumn
 	| ( function_call (alias)? ) 		#selectFun ;
 
 length

@@ -635,6 +635,23 @@ public interface jsonLogSqlListener extends ParseTreeListener {
 	void exitColumn_spec(jsonLogSqlParser.Column_specContext ctx);
 
 	/**
+	 * Enter a parse tree produced by
+	 * {@link jsonLogSqlParser#array_column_spec}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 */
+	void enterArray_column_spec(jsonLogSqlParser.Array_column_specContext ctx);
+
+	/**
+	 * Exit a parse tree produced by {@link jsonLogSqlParser#array_column_spec}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 */
+	void exitArray_column_spec(jsonLogSqlParser.Array_column_specContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link jsonLogSqlParser#expression_list}.
 	 * 
 	 * @param ctx

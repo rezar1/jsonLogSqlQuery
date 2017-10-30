@@ -40,4 +40,8 @@ public interface OptExecute {
 
 	public void setValueConvert(ValueConvert valueConvert);
 
+	public boolean isArrayAllCheck();
+
+	public void setArrayAllCheck(boolean isArrayAllCheck);
+
 }
