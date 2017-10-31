@@ -38,6 +38,7 @@ public class MainInvoke {
 			throw new IllegalArgumentException("can not find any config in file:" + configReadPath);
 		}
 		String logDirectory = changeFileString(configs[0]);
+		
 		String logName = configs[1];
 		logDirectory = changeFileString(logDirectory);
 		String logSql = configs[2];
