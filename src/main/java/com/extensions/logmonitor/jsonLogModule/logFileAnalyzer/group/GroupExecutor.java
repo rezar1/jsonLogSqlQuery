@@ -90,6 +90,7 @@ public class GroupExecutor {
 	public TwoTuple<Boolean, Long> putQueryResultDataItem(QueryResultDataItem queryResultDataItem) {
 		Map<String, Object> queryResult = queryResultDataItem.getQueryResult();
 		GroupByKey gb = new GroupByKey();
+		//group by 里面的字段一定需要包含在select 列表里面
 		for (GroupByItem groupByItem : this.groupByPaths) {
 			Object object = queryResult.get(groupByItem.getGroupByPath());
 			if (groupByItem.getValueConvert() != null) {

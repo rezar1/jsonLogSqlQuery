@@ -44,7 +44,8 @@ public class LogMonitorTaskTest {
 		when(mockFilePointerProcessor.getFilePointer(anyString(), anyString())).thenReturn(filePointer);
 		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("TestLog",
 				"/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles", "test.log");
-		SearchInfo searchInfo = new SearchInfo("select * from testJson where subUserInfos[*].adslotId in (81804026,63016870,67589938)");
+		SearchInfo searchInfo = new SearchInfo(
+				"select * from testJson where subUserInfos[*].adslotId in (84374463,61321835)");
 		logJsonAnalyzer.addSearchInfo(searchInfo);
 		LogMonitorTaskForJsonAnalyzer analyzer = new LogMonitorTaskForJsonAnalyzer(mockFilePointerProcessor,
 				logJsonAnalyzer);
@@ -90,6 +91,31 @@ public class LogMonitorTaskTest {
 		 * age desc <br/>
 		 * 减少中间对象的创建(修改了批量antlr文本处理)
 		 * 
+		 */
+	}
+
+	@Test
+	public void testJsonFunAnalyzer() throws Exception {
+		String logDirectory = "/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles";
+		String logName = "test.log";
+		FilePointer filePointer = new FilePointer();
+		filePointer.setFilename(logDirectory + logName);
+		when(mockFilePointerProcessor.getFilePointer(anyString(), anyString())).thenReturn(filePointer);
+		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("TestLog",
+				"/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles", "test2.log");
+		SearchInfo searchInfo = new SearchInfo(
+				"select app_id,hour('yyyy-MM-dd HH:mm:ss.SSSZ',timestamp) as timeOfHour,count(app_id) as appVisitCount from Sa_Req where isSdk=false  group by app_id,timeOfHour order by app_id asc , timeOfHour asc");
+		logJsonAnalyzer.addSearchInfo(searchInfo);
+		LogMonitorTaskForJsonAnalyzer analyzer = new LogMonitorTaskForJsonAnalyzer(mockFilePointerProcessor,
+				logJsonAnalyzer);
+		analyzer.call();
+		/**
+		 * sql:select day('yyyy-MM-dd HH:mm:ss SSS',time) as
+		 * dayOfTime,hour('yyyy-MM-dd HH:mm:ss SSS',time) as
+		 * hourOfDay,count(age) as ageCount from testJson where age between 50
+		 * and 95 group by dayOfTime,hourOfDay
+		 * 
+		 * 100000000 use time 217969 ms
 		 */
 	}
 

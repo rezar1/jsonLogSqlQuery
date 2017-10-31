@@ -42,4 +42,12 @@ public class TimeConvert implements ValueConvert {
 		this.field = field;
 	}
 
+	public static void main(String[] args) {
+		String time = "2017-10-30 23:59:59.982+0800";
+		TimeConvert timeConvert = new TimeConvert();
+		timeConvert.setTakeField(Calendar.HOUR_OF_DAY);
+		Object convert = timeConvert.convert(time);
+		System.out.println("time is:" + convert);
+	}
+
 }

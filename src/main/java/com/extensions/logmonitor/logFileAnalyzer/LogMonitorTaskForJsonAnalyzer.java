@@ -53,21 +53,9 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 			randomAccessFile.seek(curFilePointer);
 			String currentLine = null;
 			watch.start();
-			watch.split();
-			long time1;
-			int batchWatch = 1000000;
-			time1 = System.currentTimeMillis();
 			while ((currentLine = randomAccessFile.readLine()) != null) {
 				handleLine(currentLine, curFilePointer);
-				count++;
 				curFilePointer = randomAccessFile.getFilePointer();
-				if (count == batchWatch) {
-					watch.split();
-					count = 0;
-					System.out.println("handle " + batchWatch + " Line use time:" + watch.getSplitTime() + "\t"
-							+ (batchWatch / (System.currentTimeMillis() - time1)) + " l/ms");
-					time1 = System.currentTimeMillis();
-				}
 			}
 			watch.stop();
 			System.out.println("scan all line use time:" + watch.getSplitTime());
@@ -104,6 +92,9 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 	}
 
 	private static final StopWatch watch = new StopWatch();
+	long time1 = 0;
+	int batchWatch = 1000;
+	int batchIndex = 0;
 
 	/**
 	 * @param currentLine
@@ -118,6 +109,19 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 		JsonLogDataQueryHandler jsonLogDataQueryHandler = this.logJsonAnalyzer
 				.findJsonLogDataQueryHandler(logEventTypeStr);
 		if (jsonLogDataQueryHandler != null) {
+			count++;
+			if (time1 == 0) {
+				watch.split();
+				time1 = System.currentTimeMillis();
+			}
+			if (count == batchWatch) {
+				batchIndex++;
+				watch.split();
+				count = 0;
+				System.out.println(batchIndex + "\thandle " + batchWatch + " Line use all time:" + watch.getSplitTime()
+						+ "\t" + (batchWatch / (System.currentTimeMillis() - time1)) + " l/ms");
+				time1 = System.currentTimeMillis();
+			}
 			jsonLogDataQueryHandler.wirteString(currentLine);
 		}
 	}

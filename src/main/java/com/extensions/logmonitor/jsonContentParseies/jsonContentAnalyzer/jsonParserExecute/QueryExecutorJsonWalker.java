@@ -213,8 +213,6 @@ public class QueryExecutorJsonWalker {
 					log.debug("superPath:{} and queryExecute:{} value:{} ", superPath, queryExecute, value);
 					this.queryExecuteLazy[this.queryDataIndex.get(queryExecute)] = ExecuteLazy.newInstance(queryExecute,
 							value);
-					// queryCache.add(this.queryDataIndex.get(superPath),
-					// ExecuteLazy.newInstance(queryExecute, value));
 				}
 			}
 		}
@@ -226,8 +224,6 @@ public class QueryExecutorJsonWalker {
 				for (QueryExecute<? extends Object> queryExecute : allQueryExecutes) {
 					this.queryExecuteLazy[this.queryDataIndex.get(queryExecute)] = ExecuteLazy.newInstance(queryExecute,
 							value, true);
-					// queryCache.add(this.queryDataIndex.get(superPath),
-					// ExecuteLazy.newInstance(queryExecute, value, true));
 				}
 			}
 			this.invokeGroupByHavingDataQuery(superPath, value);

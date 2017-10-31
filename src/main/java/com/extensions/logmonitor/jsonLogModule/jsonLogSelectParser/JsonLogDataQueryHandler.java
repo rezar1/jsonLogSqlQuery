@@ -60,10 +60,12 @@ public class JsonLogDataQueryHandler {
 	}
 
 	public void doAnalyzerResult() {
+
 		for (QueryExecutor qe : this.queryExecutors) {
+			System.out.println("\nfor logEventType:" + qe.getFromTableLogName() + "handle results are:");
 			List<QueryResultDataItem> doHandle = qe.doHandle();
 			for (QueryResultDataItem qrdi : doHandle) {
-				System.out.println(qrdi.getRecordId() + "\t" + qrdi.getQueryResult());
+				System.out.println(qrdi.getQueryResult());
 			}
 		}
 	}
