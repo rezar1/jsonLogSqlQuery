@@ -61,9 +61,7 @@ public class MainInvoke {
 		LogMonitorTaskForJsonAnalyzer analyzer = new LogMonitorTaskForJsonAnalyzer(filePointerProcessor,
 				logJsonAnalyzer);
 		analyzer.call();
-
 		FileUtils.deleteDirectory(CommonConfig.tempFilePath);
-
 	}
 
 	/**
