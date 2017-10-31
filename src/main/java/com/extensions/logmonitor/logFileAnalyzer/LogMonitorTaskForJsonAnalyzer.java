@@ -55,7 +55,7 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 			watch.start();
 			watch.split();
 			long time1;
-			int batchWatch = 10000;
+			int batchWatch = 1000000;
 			time1 = System.currentTimeMillis();
 			while ((currentLine = randomAccessFile.readLine()) != null) {
 				handleLine(currentLine, curFilePointer);
