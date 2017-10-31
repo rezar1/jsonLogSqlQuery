@@ -116,7 +116,8 @@ public class NeedParsePathMatcher {
 		long time1 = 0, time2 = 0;
 		time1 = System.currentTimeMillis();
 		for (int i = 0; i < times; i++) {
-			matcher.match("app.info[*]");
+			matcher.match("subUserInfos[1]");
+			matcher.needMoreParse("subUserInfos[1]");
 		}
 		time2 = System.currentTimeMillis();
 		System.out.println("use time" + (time2 - time1));

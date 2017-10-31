@@ -425,7 +425,7 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 				qe.setValueConvert(doHandleFunctionCall.first);
 				qe.setQueryPath(doHandleFunctionCall.second.get(0));
 				qe.setAlias(getAlias(ctx.alias()));
-				log.info("QueryExecute is:{} {}", qe, qe.getQueryPathWithFieldName());
+				log.debug("QueryExecute is:{} {}", qe, qe.getQueryPathWithFieldName());
 				selectPart.addQueryExecute(qe);
 			}
 		}

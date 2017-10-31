@@ -54,14 +54,19 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 			String currentLine = null;
 			watch.start();
 			watch.split();
+			long time1;
+			int batchWatch = 10000;
+			time1 = System.currentTimeMillis();
 			while ((currentLine = randomAccessFile.readLine()) != null) {
 				handleLine(currentLine, curFilePointer);
 				count++;
 				curFilePointer = randomAccessFile.getFilePointer();
-				if (count == 1000000) {
+				if (count == batchWatch) {
 					watch.split();
 					count = 0;
-					System.out.println("handle 1000000 Line use time:" + watch.getSplitTime());
+					System.out.println("handle " + batchWatch + " Line use time:" + watch.getSplitTime() + "\t"
+							+ (batchWatch / (System.currentTimeMillis() - time1)) + " l/ms");
+					time1 = System.currentTimeMillis();
 				}
 			}
 			watch.stop();

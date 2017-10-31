@@ -46,7 +46,7 @@ import com.google.common.collect.Sets;
  * @Desc this guy is to lazy , noting left.
  *
  */
-public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
+public class JsonContentVisitor3 extends jsonBaseVisitor<Void> {
 
 	private JsonSuperScope jsonSuperScope;
 	private Scope currentScope;
@@ -59,7 +59,7 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 
 	private List<NeedParsePathMatcher> matchers = new ArrayList<>();
 
-	public JsonContentVisitor2(List<QueryExecutor> queryExecutors) {
+	public JsonContentVisitor3(List<QueryExecutor> queryExecutors) {
 		this.queryExecutorWalker = new ArrayList<>(queryExecutors.size());
 		for (QueryExecutor qe : queryExecutors) {
 			takeParseFieldPaths(qe);
@@ -99,6 +99,7 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 		boolean currentNeedParse = false;
 		boolean needParseChild = false;
 		for (NeedParsePathMatcher needParsePath : matchers) {
+			// System.out.println("needParsePath" + needParsePath);
 			if (needParsePath.match(currentParsePath)) {
 				if (!currentNeedParse) {
 					boolean isPathMatch = needParsePath.fullMatch(currentParsePath)
@@ -143,6 +144,7 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 	public Void visitObjectPart(final ObjectPartContext ctx) {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse("", true);
 		if (checkNeedDoParse.first) {
+			// System.out.println(this.currentScope.getScopeName() + ".*");
 			final String text = ctx.getText();
 			this.doInWalkers(new DoInWalker() {
 				@Override
@@ -164,6 +166,7 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 	public Void visitArrayPart(ArrayPartContext ctx) {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse("", true);
 		if (checkNeedDoParse.first) {
+			// System.out.println(this.currentScope.getScopeName() + ".*");
 			final String text = ctx.getText();
 			this.doInWalkers(new DoInWalker() {
 				@Override

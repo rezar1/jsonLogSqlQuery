@@ -103,7 +103,7 @@ public class LogMonitorTaskTest {
 		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("TestLog",
 				"/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles", "test.log");
 		SearchInfo searchInfo = new SearchInfo(
-				"select regex_group('(\\d{4}-\\d{2}-\\d{2}) (\\d{2}:?)+ \\d{3}',1,time) as timeOfDay,hour('yyyy-MM-dd HH:mm:ss SSS',time) as hourOfDay,count(age) as ageCount from testJson where age between 50 and 95 group by timeOfDay,hourOfDay order by timeOfDay desc,hourOfDay desc");
+				"select regex_group('(\\d{4}-\\d{2}-\\d{2}) (\\d{2}:?)+ \\d{3}',1,time) as timeOfDay,hour('yyyy-MM-dd HH:mm:ss SSS',time) as hourOfDay,count(age) as ageCount from testJson where age between 0 and 95 group by timeOfDay,hourOfDay order by timeOfDay desc,hourOfDay desc");
 		logJsonAnalyzer.addSearchInfo(searchInfo);
 		LogMonitorTaskForJsonAnalyzer analyzer = new LogMonitorTaskForJsonAnalyzer(mockFilePointerProcessor,
 				logJsonAnalyzer);
