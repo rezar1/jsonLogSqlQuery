@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.time.StopWatch;
 
+import com.extensions.logmonitor.config.CommonConfig;
 import com.extensions.logmonitor.exceptions.DataCleanedExeception;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDataCache.SeriAndDeser;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDataCache.utils.StringDescAndSer;
@@ -50,8 +51,8 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 				buff.putLong(obj.getRecordId());
 				buff.putInt(obj.getQueryResult().size());
 				LinkedHashMap<String, Object> queryResult = obj.getQueryResult();
-				for(Iterator<Entry<String, Object>> it = queryResult.entrySet().iterator();it.hasNext();){  
-					Entry<String, Object> entry = (Entry<String, Object>)it.next();  
+				for (Iterator<Entry<String, Object>> it = queryResult.entrySet().iterator(); it.hasNext();) {
+					Entry<String, Object> entry = (Entry<String, Object>) it.next();
 					buff.putInt(entry.getKey().getBytes().length);
 					buff.put(entry.getKey().getBytes());
 					Object value = entry.getValue();
@@ -75,7 +76,7 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 					} else if (value instanceof SeriAndDeser) {
 						((SeriAndDeser) value).serialize(value, buff);
 					}
-		        }  
+				}
 				if (obj.getGroupId() != null) {
 					buff.putLong(obj.getGroupId());
 				} else {
@@ -121,7 +122,8 @@ public class FileOutterQueryResultDataCache implements QueryResultDataCache {
 				return qrdi;
 			}
 		};
-		File tempFile = new File("./temp_" + UUID.randomUUID().toString().replaceAll("_", "") + ".data");
+		File tempFile = new File(CommonConfig.tempFilePath,
+				"temp_" + UUID.randomUUID().toString().replaceAll("_", "") + ".data");
 		if (!tempFile.exists()) {
 			try {
 				tempFile.createNewFile();

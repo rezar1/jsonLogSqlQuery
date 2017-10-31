@@ -6,8 +6,12 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
+import com.extensions.logmonitor.config.CommonConfig;
 import com.extensions.logmonitor.config.LogJsonAnalyzer;
 import com.extensions.logmonitor.config.SearchInfo;
 import com.extensions.logmonitor.logFileAnalyzer.LogMonitorTaskForJsonAnalyzer;
@@ -38,13 +42,18 @@ public class MainInvoke {
 			throw new IllegalArgumentException("can not find any config in file:" + configReadPath);
 		}
 		String logDirectory = changeFileString(configs[0]);
-		
 		String logName = configs[1];
 		logDirectory = changeFileString(logDirectory);
 		String logSql = configs[2];
 		System.out.println("logDirectory is:" + logDirectory);
 		System.out.println("logFileName is:" + logName);
 		System.out.println("logFileQuerySql is:" + logSql);
+		if (args.length > 1) {
+			String batchWatchSizeStr = args[1];
+			if (StringUtils.isNumeric(batchWatchSizeStr)) {
+				CommonConfig.watchBatchSize = Integer.parseInt(batchWatchSizeStr);
+			}
+		}
 		filePointerProcessor = new FilePointerProcessor();
 		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("Rezar", logDirectory, logName);
 		SearchInfo searchInfo = new SearchInfo(logSql);
@@ -52,6 +61,9 @@ public class MainInvoke {
 		LogMonitorTaskForJsonAnalyzer analyzer = new LogMonitorTaskForJsonAnalyzer(filePointerProcessor,
 				logJsonAnalyzer);
 		analyzer.call();
+
+		FileUtils.deleteDirectory(CommonConfig.tempFilePath);
+
 	}
 
 	/**

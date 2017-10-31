@@ -1,6 +1,7 @@
 package com.extensions.logmonitor.config;
 
 import java.io.File;
+import java.util.UUID;
 
 /**
  * 
@@ -12,12 +13,14 @@ import java.io.File;
  */
 public class CommonConfig {
 
-	public static String tempFilePath = "";
+	public static File tempFilePath;
 	public static int watchBatchSize = 1000000;
 
 	static {
-		File file = new File(".");
-
+		tempFilePath = new File("./jsonLogQuery_Temp_" + UUID.randomUUID().toString().replaceAll("-", ""));
+		if (!tempFilePath.exists()) {
+			tempFilePath.mkdirs();
+		}
 	}
 
 }

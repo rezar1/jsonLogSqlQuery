@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.UUID;
 
+import com.extensions.logmonitor.config.CommonConfig;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.dataCache.BPlusDataCache.SeriAndDeser;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderByDataItemWithObj;
 import com.extensions.logmonitor.jsonLogModule.logFileAnalyzer.order.OrderType;
@@ -37,13 +38,9 @@ public class OutterFileOrderByDataCache implements SingleOrderByDataCache {
 			}
 		};
 		this.orderTypeComparator = new OrderTypeComparator();
-		File tempFile = new File("./temp_" + UUID.randomUUID().toString().replaceAll("_", ""));
-		if (!tempFile.exists()) {
-			tempFile.mkdirs();
-		}
-		tempFile.deleteOnExit();// 子文件夹里面的文件需要先删除 TODO
-		this.objBinaryCacheWithBlockSize = new ObjBinaryCacheWithBlockSize<>(tempFile.getAbsolutePath(),
-				keySeriAndDeser, orderTypeComparator, OrderByDataItemWithObj.class);
+		this.objBinaryCacheWithBlockSize = new ObjBinaryCacheWithBlockSize<>(
+				CommonConfig.tempFilePath.getAbsolutePath(), keySeriAndDeser, orderTypeComparator,
+				OrderByDataItemWithObj.class);
 	}
 
 	@Override

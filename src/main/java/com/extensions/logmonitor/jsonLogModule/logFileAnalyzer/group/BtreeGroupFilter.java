@@ -10,6 +10,8 @@ import org.javastack.kvstore.holders.LongHolder;
 import org.javastack.kvstore.structures.btree.BplusTree.TreeEntry;
 import org.javastack.kvstore.structures.btree.BplusTreeFile;
 
+import com.extensions.logmonitor.config.CommonConfig;
+
 /**
  * 
  * @say little Boy, don't be sad.
@@ -26,7 +28,7 @@ public class BtreeGroupFilter implements GroupFilter {
 	public BtreeGroupFilter() {
 		try {
 			String templateFileName = UUID.randomUUID().toString().replaceAll("_", "") + ".data";
-			File file = new File("./" + templateFileName);
+			File file = new File(CommonConfig.tempFilePath, templateFileName);
 			file.deleteOnExit();
 			Options opts = factory.createTreeOptionsDefault().set(KVStoreFactory.FILENAME, file.getAbsolutePath());
 			this.tree = factory.createTreeFile(opts);

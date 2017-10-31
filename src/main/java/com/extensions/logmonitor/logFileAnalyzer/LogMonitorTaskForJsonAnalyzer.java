@@ -16,6 +16,7 @@ import org.bitbucket.kienerj.OptimizedRandomAccessFile;
 
 import com.extensions.logmonitor.Constants;
 import com.extensions.logmonitor.MultiLogAnalyzerResult;
+import com.extensions.logmonitor.config.CommonConfig;
 import com.extensions.logmonitor.config.LogJsonAnalyzer;
 import com.extensions.logmonitor.exceptions.FileException;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSelectParser.JsonLogDataQueryHandler;
@@ -93,7 +94,7 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 
 	private static final StopWatch watch = new StopWatch();
 	long time1 = 0;
-	int batchWatch = 1000;
+	int batchWatch = CommonConfig.watchBatchSize;
 	int batchIndex = 0;
 
 	/**
