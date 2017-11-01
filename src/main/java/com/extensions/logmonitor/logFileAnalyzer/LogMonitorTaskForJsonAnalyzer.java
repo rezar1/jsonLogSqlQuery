@@ -22,6 +22,7 @@ import com.extensions.logmonitor.exceptions.FileException;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSelectParser.JsonLogDataQueryHandler;
 import com.extensions.logmonitor.processors.FilePointer;
 import com.extensions.logmonitor.processors.FilePointerProcessor;
+import com.extensions.logmonitor.util.BatchTimeWatcher;
 import com.extensions.logmonitor.util.LogMonitorUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -31,13 +32,12 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 
 	private FilePointerProcessor filePointerProcessor;
 	private LogJsonAnalyzer logJsonAnalyzer;
+	private static final StopWatch watch = new StopWatch();
 
 	public LogMonitorTaskForJsonAnalyzer(FilePointerProcessor filePointerProcessor, LogJsonAnalyzer logJsonAnalyzer) {
 		this.filePointerProcessor = filePointerProcessor;
 		this.logJsonAnalyzer = logJsonAnalyzer;
 	}
-
-	private int count = 0;
 
 	public MultiLogAnalyzerResult call() throws Exception {
 		String dirPath = resolveDirPath(logJsonAnalyzer.getLogDirectory());
@@ -54,12 +54,13 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 			randomAccessFile.seek(curFilePointer);
 			String currentLine = null;
 			watch.start();
+			watch.split();
 			while ((currentLine = randomAccessFile.readLine()) != null) {
 				handleLine(currentLine, curFilePointer);
 				curFilePointer = randomAccessFile.getFilePointer();
 			}
-			watch.stop();
-			System.out.println("scan all line use time:" + watch.getSplitTime());
+			watch.split();
+			System.out.println("scan all lines use:" + watch.getSplitTime() + " ms");
 			logMetrics.add(getLogNamePrefix() + Constants.FILESIZE_METRIC_NAME, BigInteger.valueOf(fileSize));
 			setNewFilePointer(dynamicLogPath, file.getPath(), curFilePointer);
 			analyzerQuery();
@@ -92,10 +93,14 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 		System.out.println(logEventTypeStr);
 	}
 
-	private static final StopWatch watch = new StopWatch();
-	long time1 = 0;
-	int batchWatch = CommonConfig.watchBatchSize;
-	int batchIndex = 0;
+	private BatchTimeWatcher watcher = new BatchTimeWatcher(CommonConfig.watchBatchSize,
+			new BatchTimeWatcher.BatchWatchOutput() {
+				@Override
+				public void output(int batchIndex, int batchCount, int batchUseTime, long preTime, long currentTime) {
+					System.out.println("wirteString\t" + batchIndex + "\thandle " + batchCount + " line use all time:"
+							+ batchUseTime + "\t" + (batchCount / (batchUseTime)) + " l/ms");
+				}
+			});
 
 	/**
 	 * @param currentLine
@@ -103,27 +108,20 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 	 */
 	private void handleLine(String currentLine, long curFilePointer) {
 		int indexOf = currentLine.indexOf("LogEventType");
-		if (indexOf == -1) {
-			return;
-		}
-		String logEventTypeStr = currentLine.substring(indexOf + 15, currentLine.indexOf("\"", indexOf + 17));
-		JsonLogDataQueryHandler jsonLogDataQueryHandler = this.logJsonAnalyzer
-				.findJsonLogDataQueryHandler(logEventTypeStr);
-		if (jsonLogDataQueryHandler != null) {
-			count++;
-			if (time1 == 0) {
-				watch.split();
-				time1 = System.currentTimeMillis();
+		if (indexOf != -1 || CommonConfig.defaultLogEventType != null) {
+			String logEventTypeStr = null;
+			if (indexOf != -1) {
+				logEventTypeStr = currentLine.substring(indexOf + 15, currentLine.indexOf("\"", indexOf + 17));
+			} else {
+				logEventTypeStr = CommonConfig.defaultLogEventType;
 			}
-			if (count == batchWatch) {
-				batchIndex++;
-				watch.split();
-				count = 0;
-				System.out.println(batchIndex + "\thandle " + batchWatch + " Line use all time:" + watch.getSplitTime()
-						+ "\t" + (batchWatch / (System.currentTimeMillis() - time1)) + " l/ms");
-				time1 = System.currentTimeMillis();
+			JsonLogDataQueryHandler jsonLogDataQueryHandler = this.logJsonAnalyzer
+					.findJsonLogDataQueryHandler(logEventTypeStr);
+			if (jsonLogDataQueryHandler != null) {
+				watcher.countSingleTimeStart();
+				jsonLogDataQueryHandler.wirteString(currentLine);
+				watcher.countSingleTimeEnd();
 			}
-			jsonLogDataQueryHandler.wirteString(currentLine);
 		}
 	}
 

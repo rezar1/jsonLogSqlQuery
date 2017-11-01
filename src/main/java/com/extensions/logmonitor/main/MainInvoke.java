@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -53,6 +52,10 @@ public class MainInvoke {
 			if (StringUtils.isNumeric(batchWatchSizeStr)) {
 				CommonConfig.watchBatchSize = Integer.parseInt(batchWatchSizeStr);
 			}
+		}
+		if (args.length > 2) {
+			boolean enableLogEventType = Boolean.parseBoolean(args[2]);
+			CommonConfig.enableLogEventType = enableLogEventType;
 		}
 		filePointerProcessor = new FilePointerProcessor();
 		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("Rezar", logDirectory, logName);

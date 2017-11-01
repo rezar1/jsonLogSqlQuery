@@ -107,7 +107,8 @@ public class QueryExecutorJsonWalker {
 	public void doQueryInvoke() {
 		try {
 			// 如果当前日志行记录检验OK
-			if (this.queryExecutor.getWhereCondition().checkWhereIsSuccess(this.executeWhereResult)) {
+			if (this.queryExecutor.getWhereCondition() == null
+					|| this.queryExecutor.getWhereCondition().checkWhereIsSuccess(this.executeWhereResult)) {
 				// 处理普通取值
 				for (ExecuteLazy executeLazy : this.queryExecuteLazy) {
 					if (executeLazy != null && !executeLazy.isGroup()) {
@@ -124,17 +125,12 @@ public class QueryExecutorJsonWalker {
 					isExistsInGroup = putQueryResultDataItem.first;
 					this.queryReusltDataItem.setGroupId(putQueryResultDataItem.second);
 				}
+				// 此时的查询依赖于分组的groupId,在上一步预分配(如果需要分组的话)
 				for (ExecuteLazy executeLazy : this.queryExecuteLazy) {
 					if (executeLazy != null && executeLazy.isGroup()) {
 						executeLazy.duQuery(this.queryReusltDataItem);
 					}
 				}
-				// 处理分组聚合函数
-				// for (ExecuteLazy executeLazy : this.groupQueryCache) {
-				// if (executeLazy.isGroup()) {
-				// executeLazy.duQuery(this.queryReusltDataItem);
-				// }
-				// }
 				if (this.isGroup) {
 					GroupExecutor groupExecutor = this.queryExecutor.getGroupExecutor();
 					groupExecutor.doWhereConditionQuery(this.queryReusltDataItem, this.groupQueryCache);
@@ -170,6 +166,9 @@ public class QueryExecutorJsonWalker {
 
 	public void invokeJsonDataCondition(String superPath, Object value) {
 		WhereCondition whereCondition = this.queryExecutor.getWhereCondition();
+		if (whereCondition == null) {
+			return;
+		}
 		List<OptExecute> optExecutes = whereCondition.findOptExecutes(superPath);
 		if (GenericsUtils.notNullAndEmpty(optExecutes)) {
 			for (OptExecute optExecute : optExecutes) {

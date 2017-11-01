@@ -22,6 +22,7 @@ import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser
 import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.TrueValueContext;
 import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.ValueContext;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.NeedParsePathMatcher;
+import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonParserExecute.CheckPathInterface;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonParserExecute.QueryExecutorJsonWalker;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonScope.ArrayItemScope;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonScope.JsonSuperScope;
@@ -151,10 +152,12 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 				}
 			});
 		}
+		// watcher.countSingleTimeStart();
 		if (checkNeedDoParse.second) {
 			currentScope = new ObjectScope(currentScope, "");
 			super.visitChildren(ctx);
 		}
+		// watcher.countSingleTimeEnd();
 		currentScope = currentScope.getEnclosingScope();
 		this.config(true);
 		return null;
@@ -183,16 +186,28 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 
 	@Override
 	public Void visitObjPair(ObjPairContext ctx) {
-		return super.visitObjPair(ctx);
+		super.visitObjPair(ctx);
+		return null;
 	}
 
 	@Override
 	public Void visitArrayValues(ArrayValuesContext ctx) {
 		List<ValueContext> values = ctx.value();
 		int index = 0;
-		for (ValueContext vc : values) {
-			this.currentScope = new ArrayItemScope(this.currentScope, index++);
-			super.visit(vc);
+		for (ValueContext value : values) {
+			ArrayItemScope currentScopeTmp = new ArrayItemScope(this.currentScope, index++);
+			this.currentScope = currentScopeTmp;
+			boolean isSuper = false;
+			if (value instanceof SubArrayContext || value instanceof SubObjectContext) {
+				isSuper = true;
+			}
+			TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(),
+					isSuper);
+			if (checkNeedDoParse.first || checkNeedDoParse.second) {
+				currentScopeTmp.setNeedDoHandle(checkNeedDoParse.first);
+				currentScopeTmp.setNeedDoParseMore(checkNeedDoParse.second);
+				super.visit(value);
+			}
 		}
 		return null;
 	}
@@ -209,15 +224,33 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 
 	@Override
 	public Void visitKeyValue(KeyValueContext ctx) {
-		currentScope = new ObjPairKeyValueScope(currentScope, StrUtils.removeCommon(ctx.STRING().getText()));
-		super.visitKeyValue(ctx);
+		ObjPairKeyValueScope currentScopeTmp = new ObjPairKeyValueScope(currentScope,
+				StrUtils.removeCommon(ctx.STRING().getText()));
+		this.currentScope = currentScopeTmp;
+		ValueContext value = ctx.value();
+		boolean isSuper = false;
+		if (value instanceof SubArrayContext || value instanceof SubObjectContext) {
+			isSuper = true;
+		}
+		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), isSuper);
+		if (checkNeedDoParse.first || checkNeedDoParse.second) {
+			currentScopeTmp.setNeedDoHandle(checkNeedDoParse.first);
+			currentScopeTmp.setNeedDoParseMore(checkNeedDoParse.second);
+			super.visitKeyValue(ctx);
+		}
 		this.currentScope = this.currentScope.getEnclosingScope();
 		return null;
 	}
 
 	@Override
 	public Void visitSubObject(final SubObjectContext ctx) {
-		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), true);
+		TwoTuple<Boolean, Boolean> checkNeedDoParse = null;
+		if (this.currentScope instanceof CheckPathInterface) {
+			CheckPathInterface cpi = (CheckPathInterface) this.currentScope;
+			checkNeedDoParse = TupleUtil.tuple(cpi.needDoHandle(), cpi.needDoParseMore());
+		} else {
+			checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), true);
+		}
 		if (checkNeedDoParse.first) {
 			final String text = ctx.getText();
 			this.doInWalkers(new DoInWalker() {
@@ -234,8 +267,39 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 	}
 
 	@Override
+	public Void visitSubArray(SubArrayContext ctx) {
+		TwoTuple<Boolean, Boolean> checkNeedDoParse = null;
+		if (this.currentScope instanceof CheckPathInterface) {
+			CheckPathInterface cpi = (CheckPathInterface) this.currentScope;
+			checkNeedDoParse = TupleUtil.tuple(cpi.needDoHandle(), cpi.needDoParseMore());
+		} else {
+			checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), true);
+		}
+		if (checkNeedDoParse.first) {
+			System.out.println(this.currentScope.getScopeName() + ".*");
+			final String text = ctx.getText();
+			this.doInWalkers(new DoInWalker() {
+				@Override
+				public void walk(QueryExecutorJsonWalker walker) {
+					walker.invokeJsonDataQuery(currentScope.getScopeName() + ".*", text);
+				}
+			});
+		}
+		if (checkNeedDoParse.second) {
+			super.visitChildren(ctx);
+		}
+		return null;
+	}
+
+	@Override
 	public Void visitStringValue(StringValueContext ctx) {
-		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
+		TwoTuple<Boolean, Boolean> checkNeedDoParse = null;
+		if (this.currentScope instanceof CheckPathInterface) {
+			CheckPathInterface cpi = (CheckPathInterface) this.currentScope;
+			checkNeedDoParse = TupleUtil.tuple(cpi.needDoHandle(), cpi.needDoParseMore());
+		} else {
+			checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
+		}
 		if (checkNeedDoParse.first) {
 			final String stringValue = StrUtils.removeCommon(ctx.STRING().getText());
 			doInWalkers(new DoInWalker() {
@@ -252,7 +316,13 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 
 	@Override
 	public Void visitNumberValue(NumberValueContext ctx) {
-		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
+		TwoTuple<Boolean, Boolean> checkNeedDoParse = null;
+		if (this.currentScope instanceof CheckPathInterface) {
+			CheckPathInterface cpi = (CheckPathInterface) this.currentScope;
+			checkNeedDoParse = TupleUtil.tuple(cpi.needDoHandle(), cpi.needDoParseMore());
+		} else {
+			checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
+		}
 		if (checkNeedDoParse.first) {
 			String text = ctx.NUMBER().getText();
 			BigDecimal numberBig = null;
@@ -276,27 +346,14 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 	}
 
 	@Override
-	public Void visitSubArray(SubArrayContext ctx) {
-		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), true);
-		if (checkNeedDoParse.first) {
-			System.out.println(this.currentScope.getScopeName() + ".*");
-			final String text = ctx.getText();
-			this.doInWalkers(new DoInWalker() {
-				@Override
-				public void walk(QueryExecutorJsonWalker walker) {
-					walker.invokeJsonDataQuery(currentScope.getScopeName() + ".*", text);
-				}
-			});
-		}
-		if (checkNeedDoParse.second) {
-			super.visitChildren(ctx);
-		}
-		return null;
-	}
-
-	@Override
 	public Void visitFalseValue(FalseValueContext ctx) {
-		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
+		TwoTuple<Boolean, Boolean> checkNeedDoParse = null;
+		if (this.currentScope instanceof CheckPathInterface) {
+			CheckPathInterface cpi = (CheckPathInterface) this.currentScope;
+			checkNeedDoParse = TupleUtil.tuple(cpi.needDoHandle(), cpi.needDoParseMore());
+		} else {
+			checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
+		}
 		if (checkNeedDoParse.first) {
 			doInWalkers(new DoInWalker() {
 				@Override
@@ -312,12 +369,19 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 
 	@Override
 	public Void visitTrueValue(TrueValueContext ctx) {
-		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
+		TwoTuple<Boolean, Boolean> checkNeedDoParse = null;
+		if (this.currentScope instanceof CheckPathInterface) {
+			CheckPathInterface cpi = (CheckPathInterface) this.currentScope;
+			checkNeedDoParse = TupleUtil.tuple(cpi.needDoHandle(), cpi.needDoParseMore());
+		} else {
+			checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
+		}
 		if (checkNeedDoParse.first) {
 			doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
 					walker.invokeJsonDataQuery(currentScope.getScopeName(), true);
+					walker.invokeJsonDataCondition(currentScope.getScopeName(), true);
 					walker.invokeOrderBy(currentScope.getScopeName(), true);
 				}
 			});
@@ -327,7 +391,13 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 
 	@Override
 	public Void visitNullValue(NullValueContext ctx) {
-		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
+		TwoTuple<Boolean, Boolean> checkNeedDoParse = null;
+		if (this.currentScope instanceof CheckPathInterface) {
+			CheckPathInterface cpi = (CheckPathInterface) this.currentScope;
+			checkNeedDoParse = TupleUtil.tuple(cpi.needDoHandle(), cpi.needDoParseMore());
+		} else {
+			checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
+		}
 		if (checkNeedDoParse.first) {
 			doInWalkers(new DoInWalker() {
 				@Override
@@ -344,6 +414,18 @@ public class JsonContentVisitor2 extends jsonBaseVisitor<Void> {
 	private static interface DoInWalker {
 		public void walk(QueryExecutorJsonWalker walker);
 	}
+
+	// private BatchTimeWatcher watcher = new
+	// BatchTimeWatcher(CommonConfig.watchBatchSize,
+	// new BatchTimeWatcher.BatchWatchOutput() {
+	// @Override
+	// public void output(int batchIndex, int batchCount, int batchUseTime, long
+	// preTime, long currentTime) {
+	// System.out.println("doInWalkers " + batchIndex + "\thandle " + batchCount
+	// + " visit use all time:"
+	// + batchUseTime + "\t" + (batchCount / (batchUseTime)) + " visit/ms");
+	// }
+	// });
 
 	public void doInWalkers(DoInWalker doInWalker) {
 		for (QueryExecutorJsonWalker walker : this.queryExecutorWalker) {

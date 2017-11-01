@@ -20,7 +20,10 @@ import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser
 import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.SubArrayContext;
 import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.SubObjectContext;
 import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.TrueValueContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonAntlr4Parser.jsonParser.ValueContext;
+import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.NeedParsePathMatcher;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonParserExecute.QueryExecutorJsonWalker;
+import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonScope.ArrayItemScope;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonScope.JsonSuperScope;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonScope.ObjPairKeyValueScope;
 import com.extensions.logmonitor.jsonContentParseies.jsonContentAnalyzer.jsonScope.ObjectScope;
@@ -54,6 +57,8 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 	private Set<String> antrlParseFieldPathsForGroup = Sets.newHashSet();
 	private Set<String> antrlParseFieldPathsForOrder = Sets.newHashSet();
 
+	private List<NeedParsePathMatcher> matchers = new ArrayList<>();
+
 	public JsonContentVisitor(List<QueryExecutor> queryExecutors) {
 		this.queryExecutorWalker = new ArrayList<>(queryExecutors.size());
 		for (QueryExecutor qe : queryExecutors) {
@@ -85,26 +90,25 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 		this.antrlParseFieldPathsForAll.addAll(antrlParseFieldPathsForWhere);
 		this.antrlParseFieldPathsForAll.addAll(antrlParseFieldPathsForOrder);
 		this.antrlParseFieldPathsForAll.addAll(antrlParseFieldPathsForGroup);
+		for (String path : this.antrlParseFieldPathsForAll) {
+			this.matchers.add(new NeedParsePathMatcher(path));
+		}
 	}
 
 	public TwoTuple<Boolean, Boolean> checkNeedDoParse(String currentParsePath, boolean isSuper) {
-		return this.checkNeedDoParse(antrlParseFieldPathsForAll, currentParsePath, isSuper);
-	}
-
-	public TwoTuple<Boolean, Boolean> checkNeedDoParse(Set<String> paths, String currentParsePath, boolean isSuper) {
 		boolean currentNeedParse = false;
 		boolean needParseChild = false;
-		for (String needParsePath : paths) {
-			if (needParsePath.startsWith(currentParsePath)) {
+		for (NeedParsePathMatcher needParsePath : matchers) {
+			if (needParsePath.match(currentParsePath)) {
 				if (!currentNeedParse) {
-					boolean isPathMatch = needParsePath.equals(currentParsePath)
-							|| ((isSuper) && needParsePath.equals(currentParsePath + ".*"));
+					boolean isPathMatch = needParsePath.fullMatch(currentParsePath)
+							|| ((isSuper) && needParsePath.fullMatch(currentParsePath + ".*"));
 					if (isPathMatch) {
 						currentNeedParse = true;
 					}
 				}
 				if (!needParseChild) {
-					if (needParsePath.length() > currentParsePath.length()) {
+					if (needParsePath.needMoreParse(currentParsePath)) {
 						needParseChild = true;
 					}
 				}
@@ -114,7 +118,7 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 			}
 		}
 		if (!needParseChild) {
-			if (currentParsePath.equals("*") && paths.size() > 1) {
+			if (currentParsePath.equals("") && matchers.size() > 1) {
 				needParseChild = true;
 			}
 		}
@@ -137,7 +141,7 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 
 	@Override
 	public Void visitObjectPart(final ObjectPartContext ctx) {
-		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse("*", true);
+		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse("", true);
 		if (checkNeedDoParse.first) {
 			final String text = ctx.getText();
 			this.doInWalkers(new DoInWalker() {
@@ -158,7 +162,23 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 
 	@Override
 	public Void visitArrayPart(ArrayPartContext ctx) {
-		return super.visitArrayPart(ctx);
+		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse("", true);
+		if (checkNeedDoParse.first) {
+			final String text = ctx.getText();
+			this.doInWalkers(new DoInWalker() {
+				@Override
+				public void walk(QueryExecutorJsonWalker walker) {
+					walker.invokeJsonDataQuery("*", text);
+				}
+			});
+		}
+		if (checkNeedDoParse.second) {
+			currentScope = new ObjectScope(currentScope, "");
+			super.visitChildren(ctx);
+		}
+		currentScope = currentScope.getEnclosingScope();
+		this.config(true);
+		return null;
 	}
 
 	@Override
@@ -168,6 +188,12 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 
 	@Override
 	public Void visitArrayValues(ArrayValuesContext ctx) {
+		List<ValueContext> values = ctx.value();
+		int index = 0;
+		for (ValueContext vc : values) {
+			this.currentScope = new ArrayItemScope(this.currentScope, index++);
+			super.visit(vc);
+		}
 		return null;
 	}
 
@@ -178,7 +204,6 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 
 	@Override
 	public Void visitEmptyObj(EmptyObjContext ctx) {
-		// system.out.println("visit empty obj");
 		return null;
 	}
 
@@ -195,8 +220,6 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), true);
 		if (checkNeedDoParse.first) {
 			final String text = ctx.getText();
-			// System.out.println(this.currentScope.getScopeName() + ".*:" + ""
-			// + text);
 			this.doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
@@ -215,8 +238,6 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
 		if (checkNeedDoParse.first) {
 			final String stringValue = StrUtils.removeCommon(ctx.STRING().getText());
-			// System.out.println(this.currentScope.getScopeName() + ":" +
-			// stringValue);
 			doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
@@ -242,8 +263,6 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 			} else {
 				numValue.set(numberBig.intValue());
 			}
-			// System.out.println(this.currentScope.getScopeName() + ":" +
-			// numValue.get());
 			doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
@@ -258,7 +277,20 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 
 	@Override
 	public Void visitSubArray(SubArrayContext ctx) {
-		// TODO
+		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), true);
+		if (checkNeedDoParse.first) {
+			System.out.println(this.currentScope.getScopeName() + ".*");
+			final String text = ctx.getText();
+			this.doInWalkers(new DoInWalker() {
+				@Override
+				public void walk(QueryExecutorJsonWalker walker) {
+					walker.invokeJsonDataQuery(currentScope.getScopeName() + ".*", text);
+				}
+			});
+		}
+		if (checkNeedDoParse.second) {
+			super.visitChildren(ctx);
+		}
 		return null;
 	}
 
@@ -266,8 +298,6 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 	public Void visitFalseValue(FalseValueContext ctx) {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
 		if (checkNeedDoParse.first) {
-			// System.out.println(this.currentScope.getScopeName() + ":" +
-			// false);
 			doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
@@ -284,8 +314,6 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 	public Void visitTrueValue(TrueValueContext ctx) {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
 		if (checkNeedDoParse.first) {
-			// System.out.println(this.currentScope.getScopeName() + ":" +
-			// true);
 			doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {
@@ -301,7 +329,6 @@ public class JsonContentVisitor extends jsonBaseVisitor<Void> {
 	public Void visitNullValue(NullValueContext ctx) {
 		TwoTuple<Boolean, Boolean> checkNeedDoParse = this.checkNeedDoParse(this.currentScope.getScopeName(), false);
 		if (checkNeedDoParse.first) {
-			// System.out.println(this.currentScope.getScopeName() + ": null");
 			doInWalkers(new DoInWalker() {
 				@Override
 				public void walk(QueryExecutorJsonWalker walker) {

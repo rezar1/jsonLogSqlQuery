@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.extensions.logmonitor.config.CommonConfig;
 import com.extensions.logmonitor.config.LogJsonAnalyzer;
 import com.extensions.logmonitor.config.SearchInfo;
 import com.extensions.logmonitor.logFileAnalyzer.LogMonitorTaskForJsonAnalyzer;
@@ -39,6 +40,7 @@ public class LogMonitorTaskTest {
 	public void testJsonArrayAnalyzer() throws Exception {
 		String logDirectory = "/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles";
 		String logName = "test.log";
+		CommonConfig.watchBatchSize = 10000;
 		FilePointer filePointer = new FilePointer();
 		filePointer.setFilename(logDirectory + logName);
 		when(mockFilePointerProcessor.getFilePointer(anyString(), anyString())).thenReturn(filePointer);
@@ -58,6 +60,7 @@ public class LogMonitorTaskTest {
 		String logName = "test.log";
 		FilePointer filePointer = new FilePointer();
 		filePointer.setFilename(logDirectory + logName);
+		CommonConfig.defaultLogEventType = "testJson";
 		when(mockFilePointerProcessor.getFilePointer(anyString(), anyString())).thenReturn(filePointer);
 		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("TestLog",
 				"/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles", "test.log");
@@ -96,6 +99,7 @@ public class LogMonitorTaskTest {
 
 	@Test
 	public void testJsonFunAnalyzer() throws Exception {
+		CommonConfig.watchBatchSize = 10000;
 		String logDirectory = "/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles";
 		String logName = "test.log";
 		FilePointer filePointer = new FilePointer();
@@ -124,6 +128,8 @@ public class LogMonitorTaskTest {
 		String logDirectory = "/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles";
 		String logName = "test.log";
 		FilePointer filePointer = new FilePointer();
+		CommonConfig.defaultLogEventType = "testJson";
+		CommonConfig.watchBatchSize = 100000;
 		filePointer.setFilename(logDirectory + logName);
 		when(mockFilePointerProcessor.getFilePointer(anyString(), anyString())).thenReturn(filePointer);
 		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("TestLog",
