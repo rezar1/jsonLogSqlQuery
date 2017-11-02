@@ -129,13 +129,13 @@ public class LogMonitorTaskTest {
 		String logName = "test.log";
 		FilePointer filePointer = new FilePointer();
 		CommonConfig.defaultLogEventType = "testJson";
-		CommonConfig.watchBatchSize = 100000;
+		CommonConfig.watchBatchSize = 1000000;
 		filePointer.setFilename(logDirectory + logName);
 		when(mockFilePointerProcessor.getFilePointer(anyString(), anyString())).thenReturn(filePointer);
 		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("TestLog",
 				"/Users/rezar/RezarWorkSpace/eclipseWorkSpcae/log/logFiles", "test.log");
 		SearchInfo searchInfo = new SearchInfo(
-				"select regex_group('(\\d{4}-\\d{2}-\\d{2}) (\\d{2}:?)+ \\d{3}',1,time) as timeOfDay,hour('yyyy-MM-dd HH:mm:ss SSS',time) as hourOfDay,count(age) as ageCount from testJson where age between 0 and 95 group by timeOfDay,hourOfDay order by timeOfDay desc,hourOfDay desc");
+				"select regex_group('(\\d{4}-\\d{2}-\\d{2}) (\\d{2}:?)+ \\d{3}',1,time) as timeOfDay,hour('yyyy-MM-dd HH:mm:ss SSS',time) as hourOfDay,count(age) as ageCount from testJson where age between 50 and 95 group by timeOfDay,hourOfDay order by timeOfDay desc,hourOfDay desc");
 		logJsonAnalyzer.addSearchInfo(searchInfo);
 		LogMonitorTaskForJsonAnalyzer analyzer = new LogMonitorTaskForJsonAnalyzer(mockFilePointerProcessor,
 				logJsonAnalyzer);

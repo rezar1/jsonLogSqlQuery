@@ -47,13 +47,12 @@ public class MultiJsonLogDataQueryHandler {
 			this.parseThreads[i] = new ParseTreeThread(this, lineStrings, parseTreeQueue, this.stopSema);
 		}
 		this.visitThread = new VisitorTreeThread(parseTreeQueue, this.handler, this.stopSema);
-		startWork();
 	}
 
 	/**
 	 * 
 	 */
-	private void startWork() {
+	public void startWork() {
 		this.isOver = false;
 		for (int i = 0; i < this.parseThreads.length; i++) {
 			this.parseThreads[i].start();

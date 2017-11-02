@@ -32,7 +32,7 @@ public class JsonLogDataQueryHandler {
 	private List<QueryExecutor> queryExecutors;
 	private JsonContentVisitor2 visitor;
 	private MultiJsonLogDataQueryHandler handler;
-	private static BatchTimeWatcher watcher = new BatchTimeWatcher(CommonConfig.watchBatchSize,
+	public static BatchTimeWatcher watcher = new BatchTimeWatcher(CommonConfig.watchBatchSize,
 			new BatchTimeWatcher.BatchWatchOutput() {
 				@Override
 				public void output(int batchIndex, int batchCount, int batchUseTime, long preTime, long currentTime) {
@@ -45,11 +45,12 @@ public class JsonLogDataQueryHandler {
 		this.queryExecutors = queryExecutors;
 		this.visitor = new JsonContentVisitor2(queryExecutors);
 		this.handler = new MultiJsonLogDataQueryHandler(this);
+		// this.handler.startWork();
 	}
 
 	public void wirteString(String lineLog) {
-		this.handler.writeString(lineLog);
-		// this.doHandle(lineLog);
+		// this.handler.writeString(lineLog);
+		this.doHandle(lineLog);
 	}
 
 	public void doHandle(String lineLog) {
