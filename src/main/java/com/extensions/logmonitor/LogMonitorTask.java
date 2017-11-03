@@ -47,7 +47,7 @@ public class LogMonitorTask implements Callable<LogMetrics> {
 		long curFilePointer = 0;
 		try {
 			File file = getLogFile(dirPath);
-			randomAccessFile = new OptimizedRandomAccessFile(file, "r");
+			randomAccessFile = new OptimizedRandomAccessFile(file, "r"); 
 			long fileSize = randomAccessFile.length();
 			String dynamicLogPath = dirPath + log.getLogName();
 			curFilePointer = getCurrentFilePointer(dynamicLogPath, file.getPath(), fileSize);

@@ -9,7 +9,9 @@ package com.extensions.logmonitor.jsonLogModule.queryExecute;
  *
  */
 public class MultiThreadQueryExecutor {
-	
-	
+
+	/**
+	 * 用于对同一个查询任务,对文件进行划分,分别进行
+	 */
 
 }
