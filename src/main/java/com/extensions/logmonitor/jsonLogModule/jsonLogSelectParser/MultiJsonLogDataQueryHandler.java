@@ -34,8 +34,8 @@ public class MultiJsonLogDataQueryHandler {
 	private Thread[] parseThreads;
 	private Thread visitThread;
 	private boolean isOver;
-	private BlockingQueue<String> lineStrings = new ArrayBlockingQueue<>(4);
-	private BlockingQueue<Object> parseTreeQueue = new ArrayBlockingQueue<>(16);
+	private BlockingQueue<String> lineStrings = new ArrayBlockingQueue<>(2);
+	private BlockingQueue<Object> parseTreeQueue = new ArrayBlockingQueue<>(8);
 	private JsonLogDataQueryHandler handler;
 	private Semaphore stopSema;
 
@@ -165,7 +165,6 @@ public class MultiJsonLogDataQueryHandler {
 		for (Thread thread : this.parseThreads) {
 			thread.interrupt();
 		}
-		// this.visitThread.interrupt();
 		try {
 			this.parseTreeQueue.put(endObj);
 		} catch (InterruptedException e) {
