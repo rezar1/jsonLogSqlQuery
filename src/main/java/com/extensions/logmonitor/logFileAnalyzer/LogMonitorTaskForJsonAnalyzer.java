@@ -112,8 +112,10 @@ public class LogMonitorTaskForJsonAnalyzer implements Callable<MultiLogAnalyzerR
 			String logEventTypeStr = null;
 			if (indexOf != -1) {
 				logEventTypeStr = currentLine.substring(indexOf + 15, currentLine.indexOf("\"", indexOf + 17));
-			} else {
+			} else if (currentLine.startsWith("{")) {
 				logEventTypeStr = CommonConfig.defaultLogEventType;
+			} else {
+				return;
 			}
 			JsonLogDataQueryHandler jsonLogDataQueryHandler = this.logJsonAnalyzer
 					.findJsonLogDataQueryHandler(logEventTypeStr);

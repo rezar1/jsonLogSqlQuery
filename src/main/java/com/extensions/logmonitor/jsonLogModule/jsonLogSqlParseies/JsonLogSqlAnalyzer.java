@@ -437,7 +437,7 @@ public class JsonLogSqlAnalyzer extends jsonLogSqlBaseListener {
 
 	@Override
 	public void enterTable_references(Table_referencesContext ctx) {
-		log.debug("enterTable_references");
+		log.info("enterTable_references:{}",ctx.getText());
 		FromScope fromScope = new FromScope(this.currentScope);
 		this.currentScope = fromScope;
 		queryExecutor.setFromTableLogName(ctx.getText());

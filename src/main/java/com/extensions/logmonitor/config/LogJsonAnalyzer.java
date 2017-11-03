@@ -60,11 +60,9 @@ public class LogJsonAnalyzer {
 	}
 
 	public JsonLogDataQueryHandler findJsonLogDataQueryHandler(String logEventTypeStr) {
-		System.out.println("logEventTypeStr is:" + logEventTypeStr);
 		JsonLogDataQueryHandler jsonLogDataQueryHandler = jsonLogDataQueryHandlerMap.get(logEventTypeStr);
 		if (jsonLogDataQueryHandler == null) {
 			List<SearchInfo> findSearchInfos = this.findSearchInfos(logEventTypeStr);
-			System.out.println("findSearchInfos are:" + findSearchInfos);
 			if (GenericsUtils.isNullOrEmpty(findSearchInfos)) {
 				return null;
 			}

@@ -95,5 +95,7 @@ public class QueryExecutor {
 	public void initGroupByExecutor() {
 		this.groupExecutor = new GroupExecutor();
 	}
+	
+	
 
 }
