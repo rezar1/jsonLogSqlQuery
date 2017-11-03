@@ -1,7 +1,6 @@
 package com.extensions.logmonitor.jsonLogModule.jsonLogSelectParser;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Semaphore;
@@ -138,8 +137,9 @@ public class MultiJsonLogDataQueryHandler {
 						ParseTree tree = parser.jsonFile();
 						this.parseTreeQueue.put(tree);
 						bais.reset();
-					} catch (IOException e) {
-						log.info("error while parser jsonLogString:{} ", e);
+					} catch (Exception e) {
+						log.info("can not parse linelog:{}", take);
+						// log.info("error while parser jsonLogString:{} ", e);
 					}
 				} catch (InterruptedException e) {
 					if (this.handler.isOver()) {

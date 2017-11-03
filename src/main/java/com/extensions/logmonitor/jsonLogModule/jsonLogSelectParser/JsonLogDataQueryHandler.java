@@ -45,12 +45,12 @@ public class JsonLogDataQueryHandler {
 		this.queryExecutors = queryExecutors;
 		this.visitor = new JsonContentVisitor2(queryExecutors);
 		this.handler = new MultiJsonLogDataQueryHandler(this);
-		// this.handler.startWork();
+		this.handler.startWork();
 	}
 
 	public void wirteString(String lineLog) {
-		// this.handler.writeString(lineLog);
-		this.doHandle(lineLog);
+		this.handler.writeString(lineLog);
+		// this.doHandle(lineLog);
 	}
 
 	public void doHandle(String lineLog) {
@@ -67,7 +67,8 @@ public class JsonLogDataQueryHandler {
 			// watcher.countSingleTimeEnd();
 			bais.reset();
 		} catch (IOException e) {
-			log.info("error while parser jsonLogString:{} ", e);
+			log.info("can not parse str:{}", lineLog);
+			// log.info("error while parser jsonLogString:{} ", e);
 		}
 	}
 
