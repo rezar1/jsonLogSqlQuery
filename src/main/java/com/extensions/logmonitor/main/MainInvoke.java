@@ -54,8 +54,8 @@ public class MainInvoke {
 			}
 		}
 		if (args.length > 2) {
-			boolean enableLogEventType = Boolean.parseBoolean(args[2]);
-			CommonConfig.enableLogEventType = enableLogEventType;
+			String defaultEventType = args[2];
+			CommonConfig.defaultLogEventType = defaultEventType;
 		}
 		filePointerProcessor = new FilePointerProcessor();
 		LogJsonAnalyzer logJsonAnalyzer = new LogJsonAnalyzer("Rezar", logDirectory, logName);

@@ -79,6 +79,11 @@ public class LogJsonAnalyzer {
 
 	public LogJsonAnalyzer addSearchInfo(SearchInfo searchInfo) {
 		List<SearchInfo> cache = searchInfoMaps.getCache(searchInfo.getLogType());
+		System.out.println("cache is:" + cache);
+		if (cache == null) {
+			cache = new ArrayList<>();
+			this.searchInfoMaps.putCache(searchInfo.getLogType(), cache);
+		}
 		cache.add(searchInfo);
 		return this;
 	}

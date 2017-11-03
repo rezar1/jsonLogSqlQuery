@@ -15,8 +15,7 @@ public class CommonConfig {
 
 	public static File tempFilePath;
 	public static int watchBatchSize = 1000000;
-	public static boolean enableLogEventType = true;
-	public static String defaultLogEventType = "";
+	public static String defaultLogEventType = "test";
 
 	static {
 		tempFilePath = new File("./jsonLogQuery_Temp_" + UUID.randomUUID().toString().replaceAll("-", ""));
