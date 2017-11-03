@@ -39,6 +39,7 @@ public class LoadCache<K, V> {
 			}
 			return value.get();
 		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return null;
 	}

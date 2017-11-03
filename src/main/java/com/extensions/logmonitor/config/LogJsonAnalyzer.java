@@ -10,7 +10,6 @@ import java.util.Set;
 import com.extensions.logmonitor.jsonLogModule.jsonLogSelectParser.JsonLogDataQueryHandler;
 import com.extensions.logmonitor.jsonLogModule.queryExecute.QueryExecutor;
 import com.extensions.logmonitor.util.GenericsUtils;
-import com.extensions.logmonitor.util.LoadCache;
 import com.extensions.logmonitor.util.LoadCache.InitValue;
 
 import lombok.Data;
@@ -43,7 +42,7 @@ public class LogJsonAnalyzer {
 			return new ArrayList<>();
 		}
 	};
-	private LoadCache<String, List<SearchInfo>> searchInfoMaps = new LoadCache<String, List<SearchInfo>>(initValue);
+	private Map<String, List<SearchInfo>> searchInfoMaps = new HashMap<String, List<SearchInfo>>();
 
 	private Map<String, JsonLogDataQueryHandler> jsonLogDataQueryHandlerMap = new HashMap<>();
 
@@ -53,7 +52,7 @@ public class LogJsonAnalyzer {
 	 */
 	@SuppressWarnings("unchecked")
 	public List<SearchInfo> findSearchInfos(String logEventTypeStr) {
-		List<SearchInfo> list = searchInfoMaps.getCache(logEventTypeStr);
+		List<SearchInfo> list = searchInfoMaps.get(logEventTypeStr);
 		if (list == null) {
 			return Collections.EMPTY_LIST;
 		}
@@ -78,11 +77,11 @@ public class LogJsonAnalyzer {
 	}
 
 	public LogJsonAnalyzer addSearchInfo(SearchInfo searchInfo) {
-		List<SearchInfo> cache = searchInfoMaps.getCache(searchInfo.getLogType());
+		List<SearchInfo> cache = searchInfoMaps.get(searchInfo.getLogType());
 		System.out.println("cache is:" + cache);
 		if (cache == null) {
 			cache = new ArrayList<>();
-			this.searchInfoMaps.putCache(searchInfo.getLogType(), cache);
+			this.searchInfoMaps.put(searchInfo.getLogType(), cache);
 		}
 		cache.add(searchInfo);
 		return this;
