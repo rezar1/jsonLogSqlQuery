@@ -25,6 +25,7 @@ public class SearchInfo {
 		this.selectQuery = selectQuerySql;
 		this.queryExecutor = JsonLogQuerySqlParser.createQueryExecutor(selectQuery);
 		this.logType = this.queryExecutor.getFromTableLogName();
+		System.out.println("SearchInfo:" + this);
 	}
 
 }

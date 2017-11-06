@@ -52,7 +52,8 @@ public class SingleCondition extends BaseScope implements ConditionSuper {
 
 	@Override
 	public boolean visitQuickCondition(Map<OptExecute, Boolean> optCheckResult) {
-		return optCheckResult.get(this.getOptExecute());
+		Boolean checkResult = optCheckResult.get(this.getOptExecute());
+		return checkResult == null ? false : checkResult;
 	}
 
 }
